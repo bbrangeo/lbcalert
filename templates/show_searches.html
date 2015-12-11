@@ -9,7 +9,7 @@
     </form>
   <p class=entries>
   {% for search in searches %}
-    <h2><a href="/analyse?id={{ search.id }}">{{ search.id }} - {{ search.title }}</a></h2><a href="http://leboncoin.fr/{{ search.terms }}" target="blank">{{ search.terms }}</a><br><a href="/remove?id={{ search.id }}">remove</a>
+    <a href="/analyse?id={{ search.id }}">{{ search.title }}</a> - <a href="http://leboncoin.fr/{{ search.terms }}" target="blank">{{ search.terms }}</a> - <a href="/remove?id={{ search.id }}">remove</a><br>
   {% else %}
     <em>Unbelievable.  No searches here so far</em>
   {% endfor %}

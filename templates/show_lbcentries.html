@@ -2,16 +2,9 @@
 
 {% extends "layout.html" %}
 {% block body %}
-    <form action="{{ url_for('add_search') }}" method=post class=add-search>
-      <dl>
-        <dt>Title: <input type=text size=30 name=title>
-        <dt>Text: <input type=text size=50 name=terms>
-        <dd><input type=submit value=Add>
-      </dl>
-    </form>
   <p class=entries>
   {% for lbcentry in lbcentries %}
-    <h2><a href="http://leboncoin.fr/{{ lbcentry.category }}/{{ lbcentry.link_num }}.htm">{{ lbcentry.id }} - {{ lbcentry.title }} - {{ lbcentry.price }}</a></h2>
+    <a href="http://leboncoin.fr/{{ lbcentry.category }}/{{ lbcentry.link_num }}.htm">{{ lbcentry.title }} - {{ lbcentry.price }}</a><br>
   {% else %}
     <em>No entries</em>
   {% endfor %}
