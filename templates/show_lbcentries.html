@@ -1,3 +1,5 @@
+
+
 {% extends "layout.html" %}
 {% block body %}
     <form action="{{ url_for('add_search') }}" method=post class=add-search>
@@ -8,10 +10,10 @@
       </dl>
     </form>
   <p class=entries>
-  {% for search in searches %}
-    <h2><a href="/analyse?id={{ search.id }}">{{ search.id }} - {{ search.title }}</a></h2><a href="http://leboncoin.fr/{{ search.terms }}" target="blank">{{ search.terms }}</a><br><a href="/remove?id={{ search.id }}">remove</a>
+  {% for lbcentry in lbcentries %}
+    <h2><a href="http://leboncoin.fr/{{ lbcentry.category }}/{{ lbcentry.link_num }}.htm">{{ lbcentry.id }} - {{ lbcentry.title }} - {{ lbcentry.price }}</a></h2>
   {% else %}
-    <em>Unbelievable.  No searches here so far</em>
+    <em>No entries</em>
   {% endfor %}
   </p>
 {% endblock %}
