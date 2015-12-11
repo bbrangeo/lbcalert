@@ -36,8 +36,13 @@ def remove_search():
 def analyse_lbc():
     search = Search.query.get(request.args['id'])
     lbcentries = parselbc(LBCurl+search.terms)
-    return render_template('show_lbcentries.html', lbcentries=lbcentries)
+    flash('Successfully parsed link')
+    return redirect(url_for('show_searches'))
 
+@app.route('/showentries')
+def show_lbcentries():
+    lbcentries = LBCentry.query.all()
+    return render_template('show_lbcentries.html', lbcentries=lbcentries)
 
 if __name__ == '__main__':
     app.run()

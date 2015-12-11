@@ -17,16 +17,15 @@ class Search(db.Model):
 class LBCentry(db.Model):
     __tablename__ = 'lbc_entries'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     title = db.Column(db.String())
     category = db.Column(db.String())
-    link_num = db.Column(db.String())
     price = db.Column(db.Integer)
 
-    def __init__(self, title, category, link_num, price=None):
+    def __init__(self, title, category, id, price=None):
+        self.id = id
         self.title = title
         self.category = category
-        self.link_num = link_num
         if price:
             self.price = price
 
