@@ -25,9 +25,10 @@ def parselbc(id):
             price  = int(m.group(1))
             a.price=price
         if LBCentry.query.filter_by(id=id).first():
-            break
+            pass
         else:
             db.session.add(a)
-        search.lbc_entries.append(a)
+        #todo : test if already there
+        search.lbc_entries.appendds(a)            
     db.session.commit()
     return
