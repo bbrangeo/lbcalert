@@ -6,8 +6,6 @@ app = Flask(__name__)
 app.config.from_object(os.environ['APP_SETTINGS'])
 db = SQLAlchemy(app)
 
-LBCurl = 'http://leboncoin.fr/'
-
 from models import Search, LBCentry
 from parselbc import parselbc
 
@@ -34,14 +32,14 @@ def remove_search():
 
 @app.route('/analyse')
 def analyse_lbc():
-    search = Search.query.get(request.args['id'])
-    lbcentries = parselbc(LBCurl+search.terms)
+    lbcentries = parselbc(request.args['id'])
     flash('Successfully parsed link')
     return redirect(url_for('show_searches'))
 
 @app.route('/showentries')
 def show_lbcentries():
-    lbcentries = LBCentry.query.all()
+    search = Search.query.get(request.args['id'])
+    lbcentries = search.lbc_entries
     return render_template('show_lbcentries.html', lbcentries=lbcentries)
 
 if __name__ == '__main__':

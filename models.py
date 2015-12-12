@@ -1,11 +1,17 @@
 from app import db
 
+entries = db.Table('entries',
+    db.Column('search_id', db.Integer, db.ForeignKey('searches.id')),
+    db.Column('lbc_entry_id', db.Integer, db.ForeignKey('lbc_entries.id'))
+)
+
 class Search(db.Model):
     __tablename__ = 'searches'
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String())
     terms = db.Column(db.String())
+    lbc_entries = db.relationship('LBCentry', secondary=entries, backref='searches')
 
     def __init__(self, title, terms):
         self.title = title

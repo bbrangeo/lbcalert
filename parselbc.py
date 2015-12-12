@@ -3,9 +3,11 @@ from bs4 import BeautifulSoup
 import re
 
 from app import db
-from models import LBCentry
+from models import LBCentry, Search
 
-def parselbc(url):
+def parselbc(id):
+    search = Search.query.get(id)
+    url = "http://www.leboncoin.fr/"+search.terms
     html = requests.get(url).text
     soup = BeautifulSoup(html,"html.parser")
     
@@ -26,5 +28,6 @@ def parselbc(url):
             break
         else:
             db.session.add(a)
+        search.lbc_entries.append(a)
     db.session.commit()
     return
