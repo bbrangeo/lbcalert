@@ -29,6 +29,6 @@ def parselbc(id):
         else:
             db.session.add(a)
         #todo : test if already there
-        search.lbc_entries.appendds(a)            
+        search.lbc_entries.append(a)            
     db.session.commit()
     return
