@@ -16,19 +16,23 @@ def parselbc(id):
     
     for link in links:
         id = int(link['href'].split('/')[4].split('.')[0])
-        category = link['href'].split('/')[3]
-        title = link.find("h2",{"class":"title"}).text.strip()
-        a = LBCentry(id=id,title=title,category=category)
-        pricediv = link.find("div",{"class":"price"})
-        if pricediv:
-            m = re.match("(\d+)",pricediv.text.strip())
-            price  = int(m.group(1))
-            a.price=price
-        if LBCentry.query.filter_by(id=id).first():
-            pass
+        existing_entry = LBCentry.query.filter_by(id=id).first()
+        if existing_entry:
+            #todo : manage updates
+            #todo : test if already associated
+            search.lbc_entries.append(existing_entry)
+            continue
         else:
+            category = link['href'].split('/')[3]
+            title = link.find("h2",{"class":"title"}).text.strip()
+            a = LBCentry(id=id,title=title,category=category)
+            pricediv = link.find("div",{"class":"price"})
+            if pricediv:
+                m = re.match("(\d+)",pricediv.text.strip())
+                price  = int(m.group(1))
+                a.price=price
             db.session.add(a)
-        #todo : test if already there
-        search.lbc_entries.append(a)            
+            #todo : test if already associated
+            search.lbc_entries.append(a)
     db.session.commit()
     return
