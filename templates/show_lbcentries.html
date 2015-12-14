@@ -4,7 +4,8 @@
 {% block body %}
   <p class=entries>
   {% for lbcentry in lbcentries %}
-    <a href="http://leboncoin.fr/{{ lbcentry.category }}/{{ lbcentry.id }}.htm">{{ lbcentry.title }}{% if lbcentry.price %} - {{ lbcentry.price }}{% endif %}</a><br>
+    <a href="http://leboncoin.fr/{{ lbcentry.category }}/{{ lbcentry.linkid }}.htm">{{ lbcentry.title }}{% if lbcentry.price %} - {{ lbcentry.price }}{% endif %}</a>
+        {% if lbcentry.new %} - NEW !!{% endif %}<br>
   {% else %}
     <em>No entries</em>
   {% endfor %}

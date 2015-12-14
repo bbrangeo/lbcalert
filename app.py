@@ -20,6 +20,7 @@ from models import Search, LBCentry
 @app.route('/')
 def show_searches():
     searches = Search.query.all()
+    searches = [{"id":s.id, "title":s.title, "nbentries":len(s.lbc_entries), "nbnew":len([e for e in s.lbc_entries if e.new])} for s in searches]
     return render_template('show_searches.html', searches=searches)
 
 @app.route('/add', methods=['POST'])
@@ -60,10 +61,16 @@ def get_job():
 def show_lbcentries():
     search = Search.query.get(request.args['id'])
     lbcentries = search.lbc_entries
-    return render_template('show_lbcentries.html', lbcentries=lbcentries)
+    html = render_template('show_lbcentries.html', lbcentries=lbcentries)
+    newentries = (e for e in lbcentries if e.new)
+    for e in newentries:
+        e.new = False
+    db.session.commit()
+    return html
 
 def parselbc(id):
     search = Search.query.get(id)
+    existing_ids = [e.linkid for e in search.lbc_entries]
     url = "http://www.leboncoin.fr/"+search.terms
     html = requests.get(url).text
     soup = BeautifulSoup(html,"html.parser")
@@ -73,23 +80,19 @@ def parselbc(id):
     
     for link in links:
         linkid = int(link['href'].split('/')[4].split('.')[0])
-        existing_entry = LBCentry.query.filter_by(id=linkid).first()
-        if existing_entry:
-            #todo : manage updates
-            #todo : test if already associated
-            search.lbc_entries.append(existing_entry)
-            continue
+        #test if id already found in this search
+        if linkid in existing_ids:
+            break
         else:
             category = link['href'].split('/')[3]
             title = link.find("h2",{"class":"title"}).text.strip()
-            a = LBCentry(id=linkid,title=title,category=category)
+            a = LBCentry(linkid=linkid,title=title,category=category)
             pricediv = link.find("div",{"class":"price"})
             if pricediv:
                 m = re.match("(\d+)",pricediv.text.strip())
                 price  = int(m.group(1))
                 a.price=price
             db.session.add(a)
-            #todo : test if already associated
             search.lbc_entries.append(a)
     db.session.commit()
     return id
