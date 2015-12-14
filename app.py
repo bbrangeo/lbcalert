@@ -1,13 +1,21 @@
 from flask import Flask, render_template, flash, redirect, url_for, request
 from flask.ext.sqlalchemy import SQLAlchemy
+from bs4 import BeautifulSoup
 import os
+import requests
+import re
+
+from rq import Queue
+from rq.job import Job
+from worker import conn
 
 app = Flask(__name__)
 app.config.from_object(os.environ['APP_SETTINGS'])
 db = SQLAlchemy(app)
 
+q = Queue(connection=conn)
+
 from models import Search, LBCentry
-from parselbc import parselbc
 
 @app.route('/')
 def show_searches():
@@ -32,15 +40,59 @@ def remove_search():
 
 @app.route('/analyse')
 def analyse_lbc():
-    lbcentries = parselbc(request.args['id'])
-    flash('Successfully parsed link')
+    job = q.enqueue_call(
+        func=parselbc, args=(request.args['id'],), result_ttl=5000
+    )
+    flash('Search added to parse queue:'+job.get_id())
     return redirect(url_for('show_searches'))
+
+@app.route("/job", methods=['GET'])
+def get_job():
+    job = Job.fetch(request.args['key'], connection=conn)
+    if job.is_finished:
+        lbcentries = Search.query.get(job.result).lbc_entries
+        #TODO return of new entries
+        return "Job done", 200
+    else:
+        return "Job not finished", 202
 
 @app.route('/showentries')
 def show_lbcentries():
     search = Search.query.get(request.args['id'])
     lbcentries = search.lbc_entries
     return render_template('show_lbcentries.html', lbcentries=lbcentries)
+
+def parselbc(id):
+    search = Search.query.get(id)
+    url = "http://www.leboncoin.fr/"+search.terms
+    html = requests.get(url).text
+    soup = BeautifulSoup(html,"html.parser")
+    
+    lbclist = soup.find("div",{"class":"list-lbc"})
+    links = lbclist.findAll("a")
+    
+    for link in links:
+        linkid = int(link['href'].split('/')[4].split('.')[0])
+        existing_entry = LBCentry.query.filter_by(id=linkid).first()
+        if existing_entry:
+            #todo : manage updates
+            #todo : test if already associated
+            search.lbc_entries.append(existing_entry)
+            continue
+        else:
+            category = link['href'].split('/')[3]
+            title = link.find("h2",{"class":"title"}).text.strip()
+            a = LBCentry(id=linkid,title=title,category=category)
+            pricediv = link.find("div",{"class":"price"})
+            if pricediv:
+                m = re.match("(\d+)",pricediv.text.strip())
+                price  = int(m.group(1))
+                a.price=price
+            db.session.add(a)
+            #todo : test if already associated
+            search.lbc_entries.append(a)
+    db.session.commit()
+    return id
 
 if __name__ == '__main__':
     app.run()
