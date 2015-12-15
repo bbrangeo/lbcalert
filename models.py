@@ -39,4 +39,4 @@ class LBCentry(db.Model):
             self.price = price
 
     def __repr__(self):
-        return '<id {}>'.format(self.id)
+        return '<linkid {}>'.format(self.linkid)

@@ -1,5 +1,6 @@
-from flask import Flask, render_template, flash, redirect, url_for, request
+from flask import Flask, render_template, flash, redirect, url_for, request, current_app
 from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.mail import Mail, Message
 from bs4 import BeautifulSoup
 import os
 import requests
@@ -8,6 +9,8 @@ import re
 from rq import Queue
 from rq.job import Job
 from worker import conn
+
+from scheduler import Scheduler
 
 app = Flask(__name__)
 app.config.from_object(os.environ['APP_SETTINGS'])
@@ -78,6 +81,7 @@ def parselbc(id):
     lbclist = soup.find("div",{"class":"list-lbc"})
     links = lbclist.findAll("a")
     
+    newitems=[]
     for link in links:
         linkid = int(link['href'].split('/')[4].split('.')[0])
         #test if id already found in this search
@@ -94,8 +98,23 @@ def parselbc(id):
                 a.price=price
             db.session.add(a)
             search.lbc_entries.append(a)
+            newitems.append(a)
     db.session.commit()
+    
+    if len(newitems)>0:
+        with app.test_request_context():
+            mail=Mail(app)
+            msg = Message('[LBCbot] New items for "'+search.terms+'"', sender='lbcbot@gmail.com', recipients=['aimon.nicolas@gmail.com',])
+            msg.html = render_template('show_lbcentries.html', lbcentries=newitems)
+            mail.send(msg)
     return id
 
-if __name__ == '__main__':
-    app.run()
+def refresh_searches():
+    searches = Search.query.all()
+    for search in searches:
+        q.enqueue_call(
+            func=parselbc, args=(search.id,)
+        )
+
+scheduler = Scheduler(300, refresh_searches)
+scheduler.start()
