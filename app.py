@@ -118,3 +118,6 @@ def refresh_searches():
 
 scheduler = Scheduler(300, refresh_searches)
 scheduler.start()
+
+if __name__ == '__main__':
+    app.run()
