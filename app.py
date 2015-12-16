@@ -91,7 +91,8 @@ def parselbc(id):
         if linkid in existing_ids:
             break
         else:
-            category = link['href'].split('/')[3]
+            #TODO actually parse category
+            category = "category"
             title = link.find("h2",{"class":"title"}).text.strip()
             a = LBCentry(linkid=linkid,title=title,category=category)
             pricediv = link.find("div",{"class":"price"})
