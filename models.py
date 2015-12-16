@@ -11,11 +11,13 @@ class Search(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String())
     terms = db.Column(db.String())
+    email = db.Column(db.String())
     lbc_entries = db.relationship('LBCentry', secondary=entries, backref='searches')
 
-    def __init__(self, title, terms):
+    def __init__(self, title, terms, email):
         self.title = title
         self.terms = terms
+        self.email = email
 
     def __repr__(self):
         return '<id {}>'.format(self.id)

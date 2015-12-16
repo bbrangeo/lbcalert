@@ -29,7 +29,7 @@ def show_searches():
 
 @app.route('/add', methods=['POST'])
 def add_search():
-    search = Search(title=request.form['title'], terms=request.form['terms'])
+    search = Search(title=request.form['title'], terms=request.form['terms'], email=request.form['email'])
     db.session.add(search)
     db.session.commit()
     flash('New search was successfully posted')
@@ -109,7 +109,7 @@ def parselbc(id):
         r = requests.get(url_for("show_searches",_external=True))
         if len(newitems)>0:
             mail=Mail(app)
-            msg = Message('[LBCbot] New items for "'+search.title+'"', sender='lbcbot@gmail.com', recipients=['aimon.nicolas@gmail.com',])
+            msg = Message('[LBCbot] New items for "'+search.title+'"', sender='lbcbot@gmail.com', recipients=[search.email,])
             msg.html = render_template('show_lbcentries.html', lbcentries=newitems)
             mail.send(msg)
     return id
