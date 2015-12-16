@@ -4,7 +4,6 @@ from flask.ext.mail import Mail, Message
 from bs4 import BeautifulSoup
 import os
 import requests
-import re
 import random
 
 from rq import Queue
@@ -24,7 +23,7 @@ from models import Search, LBCentry
 @app.route('/')
 def show_searches():
     searches = Search.query.all()
-    searches = [{"id":s.id, "title":s.title, "terms":s.terms, "nbentries":len(s.lbc_entries), "nbnew":len([e for e in s.lbc_entries if e.new])} for s in searches]
+    searches = [{"s":s, "nbentries":len(s.lbc_entries), "nbnew":len([e for e in s.lbc_entries if e.new])} for s in searches]
     return render_template('show_searches.html', searches=searches)
 
 @app.route('/add', methods=['POST'])

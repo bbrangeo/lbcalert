@@ -9,8 +9,8 @@
     </form>
   <p class=entries>
   {% for search in searches %}
-    <a href="{{ url_for('show_lbcentries') }}?id={{ search.id }}">{{ search.title }}</a> - <em>{{ search.terms }}</em>
-    <br><a href="{{ url_for('analyse_lbc') }}?id={{ search.id }}">Execute</a> - <a href="/remove?id={{ search.id }}">remove</a><br>
+    <br><a href="{{ url_for('show_lbcentries') }}?id={{ search.s.id }}">{{ search.s.title }}</a> - <em>{{ search.s.terms }}</em> -<strong></strong> {{ search.s.email }}</strong>
+    <br><a href="{{ url_for('analyse_lbc') }}?id={{ search.s.id }}">Execute</a> - <a href="/remove?id={{ search.s.id }}">remove</a><br>
     Nb_entries : {{ search.nbentries }}{% if search.nbnew>0%}, NEW : {{ search.nbnew }}{% endif %} <br>
   {% else %}
     <em>No searches here so far</em>
