@@ -4,7 +4,7 @@
     Title:<br>
     <input type=text size=30 name=title>
     <br>
-    Address (copy from address bar, example : "telephonie/offres/ile_de_france/"):<br>
+    Search terms (copy from address bar, example : "telephonie/offres/ile_de_france/"):<br>
     <input type=text size=50 name=terms>
     <br>
     Email recipient:<br>
@@ -17,7 +17,7 @@
     <br><a href="{{ url_for('show_lbcentries') }}?id={{ search.s.id }}">{{ search.s.title }}</a> - <em>{{ search.s.terms }}</em>
     <br> Send e-mail to : {{ search.s.email }}
     <br><a href="{{ url_for('analyse_lbc') }}?id={{ search.s.id }}">Execute</a> - <a href="/remove?id={{ search.s.id }}">remove</a><br>
-    Nb_entries : {{ search.nbentries }}{% if search.nbnew>0%}, NEW : {{ search.nbnew }}{% endif %} <br>
+    {{ search.nbentries }} results{% if search.nbnew>0%} - {{ search.nbnew }} new{% endif %} <br>
   {% else %}
     <em>No searches here so far</em>
   {% endfor %}
