@@ -7,6 +7,7 @@ class Config(object):
     CSRF_ENABLED = True
     SECRET_KEY = 'this-really-needs-to-be-changed'
     SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
+    LBCURL = "http://trickseek-proxyserver.appspot.com/www.leboncoin.fr/"
     MAIL_SERVER ='smtp.gmail.com'
     MAIL_PORT = 465
     MAIL_USE_TLS = False

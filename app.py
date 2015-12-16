@@ -74,7 +74,7 @@ def show_lbcentries():
 def parselbc(id):
     search = Search.query.get(id)
     existing_ids = [e.linkid for e in search.lbc_entries]
-    url = "http://www.leboncoin.fr/"+search.terms
+    url = app.config['LBCURL']+search.terms
     html = requests.get(url).text
     soup = BeautifulSoup(html,"html.parser")
     
@@ -83,7 +83,7 @@ def parselbc(id):
     
     newitems=[]
     for link in links:
-        linkid = int(link['href'].split('/')[4].split('.')[0])
+        linkid = int(link['href'].split('/')[-1].split('.')[0])
         #test if id already found in this search
         if linkid in existing_ids:
             break
@@ -106,7 +106,7 @@ def parselbc(id):
         r = requests.get(url_for("show_searches",_external=True))
         if len(newitems)>0:
             mail=Mail(app)
-            msg = Message(r.url+'[LBCbot] New items for "'+search.title+'"', sender='lbcbot@gmail.com', recipients=['aimon.nicolas@gmail.com',])
+            msg = Message('[LBCbot] New items for "'+search.title+'"', sender='lbcbot@gmail.com', recipients=['aimon.nicolas@gmail.com',])
             msg.html = render_template('show_lbcentries.html', lbcentries=newitems)
             mail.send(msg)
     return id
