@@ -1,12 +1,16 @@
 {% extends "layout.html" %}
 {% block body %}
     <form action="{{ url_for('add_search') }}" method=post class=add-search>
-      <dl>
-        <dt>Title: <input type=text size=30 name=title>
-        <dt>Text: <input type=text size=50 name=terms>
-        <dt>Email: <input type=text size=50 name=email>
-        <dd><input type=submit value=Add>
-      </dl>
+    Title:<br>
+    <input type=text size=30 name=title>
+    <br>
+    Address (copy from address bar, example : "telephonie/offres/ile_de_france/"):<br>
+    <input type=text size=50 name=terms>
+    <br>
+    Email recipient:<br>
+    <input type=text size=50 name=email>
+    <br>
+    <input type=submit value=Add>
     </form>
   <p class=entries>
   {% for search in searches %}
