@@ -16,6 +16,7 @@ class Config(object):
 
 class ProductionConfig(Config):
     DEBUG = False
+    SERVER_NAME = "lbcalert-pro.herokuapp.com"
 
 class StagingConfig(Config):
     DEVELOPMENT = True
