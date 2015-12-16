@@ -121,7 +121,5 @@ def refresh_searches():
             func=parselbc, args=(search.id,)
         )
 
-if __name__ == '__main__':
-    scheduler = Scheduler(300, refresh_searches)
-    scheduler.start()
-    app.run()
+scheduler = Scheduler(300, refresh_searches)
+scheduler.start()
