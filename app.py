@@ -105,13 +105,12 @@ def parselbc(id):
             newitems.append(a)
     db.session.commit()
     
-
     with app.test_request_context():
         r = requests.get(url_for("show_searches",_external=True))
         if len(newitems)>0:
             mail=Mail(app)
             msg = Message('[LBCbot] New items for "'+search.title+'"', sender='lbcbot@gmail.com', recipients=[search.email,])
-            msg.html = render_template('show_lbcentries.html', lbcentries=newitems)
+            msg.html = render_template('email_entries.html', lbcentries=newitems)
             mail.send(msg)
     return id
 
