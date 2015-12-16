@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import os
 import requests
 import random
+import re
 
 from rq import Queue
 from rq.job import Job
@@ -120,8 +121,7 @@ def refresh_searches():
             func=parselbc, args=(search.id,)
         )
 
-scheduler = Scheduler(300, refresh_searches)
-scheduler.start()
-
 if __name__ == '__main__':
+    scheduler = Scheduler(300, refresh_searches)
+    scheduler.start()
     app.run()
