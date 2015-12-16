@@ -5,7 +5,7 @@ class Config(object):
     DEBUG = False
     TESTING = False
     CSRF_ENABLED = True
-    SECRET_KEY = 'this-really-needs-to-be-changed'
+    SECRET_KEY = '\x08t\xd7\x06\xda\xa2$\x9f\xca\xa9\x9d\x9c\xb1\xe5\x13\x8d\xb7a\xd7L)\x9d\xf4\x8d'
     SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
     #todo : automatically manage list
     PROXIES = ['http://unblockwebsitesproxy.appspot.com','http://trickseek-proxyserver.appspot.com','http://proxy-4-web.appspot.com','http://wirtzed.appspot.com','https://techbum-server.appspot.com/']
