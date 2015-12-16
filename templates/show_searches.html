@@ -9,10 +9,11 @@
     </form>
   <p class=entries>
   {% for search in searches %}
-    <a href="{{ url_for('show_lbcentries') }}?id={{ search.id }}">{{ search.title }}</a> - <a href="{{ url_for('analyse_lbc') }}?id={{ search.id }}">Execute</a> - <a href="/remove?id={{ search.id }}">remove</a><br>
+    <a href="{{ url_for('show_lbcentries') }}?id={{ search.id }}">{{ search.title }}</a> - <em>{{ search.terms }}</em>
+    <br><a href="{{ url_for('analyse_lbc') }}?id={{ search.id }}">Execute</a> - <a href="/remove?id={{ search.id }}">remove</a><br>
     Nb_entries : {{ search.nbentries }}{% if search.nbnew>0%}, NEW : {{ search.nbnew }}{% endif %} <br>
   {% else %}
-    <em>Unbelievable.  No searches here so far</em>
+    <em>No searches here so far</em>
   {% endfor %}
   </p>
 {% endblock %}

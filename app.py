@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import os
 import requests
 import re
+import random
 
 from rq import Queue
 from rq.job import Job
@@ -23,7 +24,7 @@ from models import Search, LBCentry
 @app.route('/')
 def show_searches():
     searches = Search.query.all()
-    searches = [{"id":s.id, "title":s.title, "nbentries":len(s.lbc_entries), "nbnew":len([e for e in s.lbc_entries if e.new])} for s in searches]
+    searches = [{"id":s.id, "title":s.title, "terms":s.terms, "nbentries":len(s.lbc_entries), "nbnew":len([e for e in s.lbc_entries if e.new])} for s in searches]
     return render_template('show_searches.html', searches=searches)
 
 @app.route('/add', methods=['POST'])
@@ -74,7 +75,9 @@ def show_lbcentries():
 def parselbc(id):
     search = Search.query.get(id)
     existing_ids = [e.linkid for e in search.lbc_entries]
-    url = app.config['LBCURL']+search.terms
+    proxy = random.choice(app.config['PROXIES'])
+    print(proxy)
+    url = "/".join([proxy,app.config['LBCURL'],search.terms])
     html = requests.get(url).text
     soup = BeautifulSoup(html,"html.parser")
     
