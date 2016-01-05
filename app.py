@@ -46,7 +46,7 @@ def remove_search():
 @app.route('/analyse')
 def analyse_lbc():
     job = q.enqueue_call(
-        func=parselbc, args=(request.args['id'],), result_ttl=5000
+        func=parselbc, args=(request.args['id'],), result_ttl=0
     )
     flash('Search added to parse queue:'+job.get_id())
     return redirect(url_for('show_searches'))
@@ -114,6 +114,9 @@ def parselbc(id):
             mail.send(msg)
     return id
 
+def task():
+    refresh_searches()
+
 def refresh_searches():
     searches = Search.query.all()
     for search in searches:
@@ -121,5 +124,5 @@ def refresh_searches():
             func=parselbc, args=(search.id,)
         )
 
-scheduler = Scheduler(300, refresh_searches)
+scheduler = Scheduler(300, task)
 scheduler.start()
