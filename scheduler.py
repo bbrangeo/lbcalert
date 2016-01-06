@@ -1,6 +1,10 @@
 from threading import Timer, Thread
 from time import sleep
 
+from app import q
+from models import Search, LBCentry
+from parser import parselbc
+
 class Scheduler(object):
     def __init__(self, sleep_time, function):
         self.sleep_time = sleep_time
@@ -23,3 +27,16 @@ class Scheduler(object):
         if self._t is not None:
             self._t.cancel()
             self._t = None
+
+def task():
+    refresh_searches()
+
+def refresh_searches():
+    searches = Search.query.all()
+    for search in searches:
+        q.enqueue_call(
+            func=parselbc, args=(search.id,)
+        )
+
+scheduler = Scheduler(300, task)
+scheduler.start()

@@ -1,6 +1,5 @@
 import os
 
-
 class Config(object):
     DEBUG = False
     TESTING = False
@@ -14,6 +13,7 @@ class Config(object):
     MAIL_PORT = 465
     MAIL_USE_TLS = False
     MAIL_USE_SSL = True
+    #todo : hide this (and change password)
     MAIL_USERNAME = 'lbcbot@gmail.com'
     MAIL_PASSWORD = 's7y9QSGbKPXU'
 
