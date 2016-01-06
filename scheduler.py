@@ -1,7 +1,8 @@
 from threading import Timer, Thread
 from time import sleep
+import requests
 
-from app import q
+from app import app,q
 from models import Search, LBCentry
 from parser import parselbc
 
@@ -29,7 +30,11 @@ class Scheduler(object):
             self._t = None
 
 def task():
+    ping_heroku()
     refresh_searches()
+
+def ping_heroku():
+    requests.get("http://"+app.config['SERVER_NAME'])
 
 def refresh_searches():
     searches = Search.query.all()

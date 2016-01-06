@@ -25,7 +25,7 @@ def parselbc(id):
             links = lbclist.findAll("a")
         except:
             mail=Mail(app)
-            msg = Message('Problem parsing LBC', sender='lbcbot@gmail.com', recipients=[search.email,])
+            msg = Message('[LBCbot] Problem parsing "'+search.title+'"', sender='lbcbot@gmail.com', recipients=[search.email,])
             msg.html = render_template('email_parseissue.html', issue=sys.exc_info())
             mail.send(msg)            
             return
