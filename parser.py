@@ -16,7 +16,8 @@ def parselbc(id):
         proxy = random.choice(app.config['PROXIES'])
     
         url = "/".join([proxy,app.config['LBCURL'],search.terms])
-        html = requests.get(url).text
+        r = requests.get(url)
+        html = r.text
         soup = BeautifulSoup(html,"html.parser")
         
         lbclist = soup.find("div",{"class":"list-lbc"})
@@ -26,9 +27,9 @@ def parselbc(id):
         except:
             mail=Mail(app)
             msg = Message('[LBCbot] Problem parsing "'+search.title+'"', sender='lbcbot@gmail.com', recipients=[search.email,])
-            msg.html = render_template('email_parseissue.html', issue=sys.exc_info(), proxy=proxy)
+            msg.html = render_template('email_parseissue.html', issue=sys.exc_info(), response = r)
             mail.send(msg)            
-            return
+            return id
     
         newitems=[]
         for link in links:

@@ -1,5 +1,8 @@
 <!doctype html>
 <p>
-{{ issue }}<br>
-proxy : {{ proxy }}
+{{ issue }}
+<br>
+url : {{ response.url }}
+<br>
+response : {{ response.status_code }} - {{ response.reason }}
 </p>
