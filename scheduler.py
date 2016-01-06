@@ -30,6 +30,7 @@ class Scheduler(object):
             self._t = None
 
 def task():
+    print("task")
     ping_heroku()
     refresh_searches()
 
@@ -40,7 +41,7 @@ def refresh_searches():
     searches = Search.query.all()
     for search in searches:
         q.enqueue_call(
-            func=parselbc, args=(search.id,)
+            func=parselbc, args=(search.id,), result_ttl=0
         )
 
 scheduler = Scheduler(300, task)
