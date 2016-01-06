@@ -10,3 +10,8 @@ app = Flask(__name__)
 app.config.from_object(os.environ['APP_SETTINGS'])
 db = SQLAlchemy(app)
 q = Queue(connection=conn)
+
+import models
+from parser import parselbc
+import scheduler
+import router
