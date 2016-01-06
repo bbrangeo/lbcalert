@@ -26,7 +26,7 @@ def parselbc(id):
         except:
             mail=Mail(app)
             msg = Message('[LBCbot] Problem parsing "'+search.title+'"', sender='lbcbot@gmail.com', recipients=[search.email,])
-            msg.html = render_template('email_parseissue.html', issue=sys.exc_info())
+            msg.html = render_template('email_parseissue.html', issue=sys.exc_info(), proxy=proxy)
             mail.send(msg)            
             return
     
