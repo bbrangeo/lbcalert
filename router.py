@@ -2,7 +2,7 @@ from flask import render_template, request, flash, redirect, url_for
 
 from app import app, db, q
 from models import Search, LBCentry
-from parser import parselbc
+from lbcparser import parselbc
 
 @app.route('/')
 def show_searches():

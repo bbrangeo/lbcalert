@@ -1,6 +1,6 @@
 from app import app, db
 import models
-from parser import task
+from lbcparser import task
 import router
 from scheduler import Scheduler
 
