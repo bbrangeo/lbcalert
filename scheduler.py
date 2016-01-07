@@ -39,7 +39,6 @@ def ping_heroku():
 def refresh_searches():
     searches = Search.query.all()
     for search in searches:
-        print("parse search"+str(search.id))
-        q.enqueue_call(
+        job = q.enqueue_call(
             func=parselbc, args=(search.id,), result_ttl=0
         )

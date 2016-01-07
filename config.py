@@ -24,12 +24,12 @@ class ProductionConfig(Config):
 
 class StagingConfig(Config):
     DEVELOPMENT = True
-    DEBUG = True
+    DEBUG = False
     SERVER_NAME = "lbcalert-stage.herokuapp.com"
 
 class DevelopmentConfig(Config):
     DEVELOPMENT = True
-    DEBUG = True
+    DEBUG = False
     SERVER_NAME = "unkkf54db223.naimo.koding.io:5000"
 
 class TestingConfig(Config):
