@@ -59,3 +59,17 @@ def parselbc(id):
             msg.html = render_template('email_entries.html', lbcentries=newitems)
             mail.send(msg)
         return id
+        
+def task():
+    ping_heroku()
+    refresh_searches()
+
+def ping_heroku():
+    requests.get("http://"+app.config['SERVER_NAME'])
+
+def refresh_searches():
+    searches = Search.query.all()
+    for search in searches:
+        job = q.enqueue_call(
+            func=parselbc, args=(search.id,), result_ttl=0
+        )

@@ -1,10 +1,5 @@
 from threading import Timer, Thread
 from time import sleep
-import requests
-
-from app import app,q
-from models import Search, LBCentry
-from parser import parselbc
 
 class Scheduler(object):
     def __init__(self, sleep_time, function):
@@ -28,17 +23,3 @@ class Scheduler(object):
         if self._t is not None:
             self._t.cancel()
             self._t = None
-
-def task():
-    ping_heroku()
-    refresh_searches()
-
-def ping_heroku():
-    requests.get("http://"+app.config['SERVER_NAME'])
-
-def refresh_searches():
-    searches = Search.query.all()
-    for search in searches:
-        job = q.enqueue_call(
-            func=parselbc, args=(search.id,), result_ttl=0
-        )
