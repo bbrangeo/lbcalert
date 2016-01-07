@@ -43,6 +43,3 @@ def refresh_searches():
         q.enqueue_call(
             func=parselbc, args=(search.id,), result_ttl=0
         )
-
-scheduler = Scheduler(300, task)
-scheduler.start()
