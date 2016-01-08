@@ -1,9 +1,9 @@
 from app import app, db
 import models
+import login
 from lbcparser import task
 import router
 from scheduler import Scheduler
-
 scheduler = Scheduler(600, task)
 scheduler.start()
 
