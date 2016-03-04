@@ -1,5 +1,5 @@
 from flask import render_template, request, flash, redirect, url_for
-from flask.ext.login import login_user, logout_user, login_required
+from flask.ext.login import login_user, logout_user, login_required, current_user
 
 from app import app, db, q
 from models import Search, LBCentry
@@ -9,13 +9,13 @@ from models import User
 @app.route('/')
 @login_required
 def show_searches():
-    searches = Search.query.all()
+    searches = Search.query.filter_by(email=current_user.email).all()
     searches = [{"s":s, "nbentries":len(s.lbc_entries), "nbnew":len([e for e in s.lbc_entries if e.new])} for s in searches]
     return render_template('show_searches.html', searches=searches)
 
 @app.route('/add', methods=['POST'])
 def add_search():
-    search = Search(title=request.form['title'], terms=request.form['terms'], email=request.form['email'])
+    search = Search(title=request.form['title'], terms=request.form['terms'], email=current_user.email)
     db.session.add(search)
     db.session.commit()
     flash('New search was successfully posted')

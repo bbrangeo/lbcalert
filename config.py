@@ -30,7 +30,7 @@ class StagingConfig(Config):
 class DevelopmentConfig(Config):
     DEVELOPMENT = True
     DEBUG = True
-    SERVER_NAME = "unkkf54db223.naimo.koding.io:5000"
+    SERVER_NAME = "lbc-naimo.c9users.io"
 
 class TestingConfig(Config):
     TESTING = True
