@@ -20,7 +20,7 @@ def parselbc(id):
         html = r.text
         soup = BeautifulSoup(html,"html.parser")
         
-        lbclist = soup.find("div",{"class":"list-lbc"})
+        lbclist = soup.find("ul",{"class":"tabsContent"})
 
         try:
             links = lbclist.findAll("a")
@@ -34,15 +34,17 @@ def parselbc(id):
         newitems=[]
         for link in links:
             linkid = int(link['href'].split('/')[-1].split('.')[0])
+            print(linkid)
             #test if id already found in this search
             if linkid in existing_ids:
                 break
             else:
                 #TODO actually parse category
                 category = "category"
-                title = link.find("h2",{"class":"title"}).text.strip()
+                title = link['title'].strip()
+                print(title)
                 a = LBCentry(linkid=linkid,title=title,category=category)
-                pricediv = link.find("div",{"class":"price"})
+                pricediv = link.find("h3",{"class":"item_price"})
                 if pricediv:
                     m = re.match("(\d+)",pricediv.text.strip())
                     price  = int(m.group(1))
