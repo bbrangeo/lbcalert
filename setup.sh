@@ -25,6 +25,6 @@ pip install -r requirements.txt
 sudo su - postgres <<WRAP
 createuser -d $USER
 WRAP
-createdb lbcalert_dev
+createdb -E UTF8 -T template0 lbcalert_dev
 
 python manage.py db upgrade
