@@ -24,6 +24,8 @@ def add_search():
 @app.route('/remove')
 def remove_search():
     search = Search.query.get(request.args['id'])
+    for entry in LBCentry.query.filter(LBCentry.searches.any(id=request.args['id'])).all():
+        db.session.delete(entry)
     db.session.delete(search)
     db.session.commit()
     flash('Search was successfully deleted')

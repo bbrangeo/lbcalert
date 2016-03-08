@@ -13,7 +13,7 @@ class Search(db.Model):
     title = db.Column(db.String())
     terms = db.Column(db.String())
     email = db.Column(db.String())
-    lbc_entries = db.relationship('LBCentry', secondary=entries, backref='searches')
+    lbc_entries = db.relationship('LBCentry', secondary=entries, backref=db.backref('searches'))
 
     def __init__(self, title, terms, email):
         self.title = title
