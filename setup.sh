@@ -4,6 +4,7 @@ sudo add-apt-repository ppa:chris-lea/redis-server
 
 sudo apt-get update
 sudo apt-get install build-essential postgresql postgresql-contrib redis-server
+sudo apt-get install libpq-dev python3-dev python3-pip
 
 sudo pip install --upgrade virtualenv
 sudo pip install --upgrade virtualenvwrapper

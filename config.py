@@ -30,8 +30,8 @@ class StagingConfig(Config):
 
 class DevelopmentConfig(Config):
     DEVELOPMENT = True
-    DEBUG = True
-    SERVER_NAME = "lbc-naimo.c9users.io"
+    DEBUG = False
+    SERVER_NAME = "localhost:8080"
 
 class TestingConfig(Config):
     TESTING = True
