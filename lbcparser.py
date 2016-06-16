@@ -20,10 +20,8 @@ def parselbc(id):
         html = r.text
         soup = BeautifulSoup(html,"html.parser")
         
-        lbclist = soup.find("ul",{"class":"tabsContent"})
-
         try:
-            links = lbclist.findAll("a")
+            links = soup.findAll("a",{"class":"list_item"})
         except:
             print(sys.exc_info(), r)
             return id
