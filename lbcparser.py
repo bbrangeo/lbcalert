@@ -5,6 +5,7 @@ import random
 import requests
 import re
 import sys
+import os
 
 from app import app, db, q
 from models import Search, LBCentry
@@ -15,13 +16,17 @@ def parselbc(id):
         existing_ids = [e.linkid for e in search.lbc_entries]
         proxy = random.choice(app.config['PROXIES'])
     
-        url = "/".join([proxy,app.config['LBCURL'],search.terms])
+        url = "/".join([app.config['LBCURL'],search.terms])
+
+        proxies = {"https":app.config['PROXY_URL']}        
+
         r = requests.get(url)
         html = r.text
-        soup = BeautifulSoup(html,"html.parser")
-        
+        soup = BeautifulSoup(html,"html.parser")     
+
         try:
-            links = soup.findAll("a",{"class":"list_item"})
+            section = soup.find("section",{"class":"mainList"})
+            links = section.findAll("a",{"class":"list_item"})
         except:
             print(sys.exc_info(), r)
             return id
@@ -29,7 +34,6 @@ def parselbc(id):
         newitems=[]
         for link in links:
             linkid = int(link['href'].split('/')[-1].split('.')[0])
-            print(linkid)
             #test if id already found in this search
             if linkid in existing_ids:
                 break
@@ -37,7 +41,6 @@ def parselbc(id):
                 #TODO actually parse category
                 category = "category"
                 title = link['title'].strip()
-                print(title)
                 a = LBCentry(linkid=linkid,title=title,category=category)
                 pricediv = link.find("h3",{"class":"item_price"})
                 if pricediv:
