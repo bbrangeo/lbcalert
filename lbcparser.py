@@ -20,7 +20,7 @@ def parselbc(id):
 
         proxies = {"https":app.config['PROXY_URL']}        
 
-        r = requests.get(url)
+        r = requests.get(url, proxies = proxies)
         html = r.text
         soup = BeautifulSoup(html,"html.parser")     
 
