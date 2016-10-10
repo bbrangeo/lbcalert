@@ -1,9 +1,16 @@
 from app import db
 from datetime import datetime
 
+from flask.ext.login import current_user
+
 search_entry_links = db.Table('search_entry_links',
     db.Column('search_id', db.Integer, db.ForeignKey('searches.id')),
     db.Column('lbc_entry_id', db.Integer, db.ForeignKey('lbc_entries.id'))
+)
+
+search_user_links = db.Table('search_user_links',
+    db.Column('search_id', db.Integer, db.ForeignKey('searches.id')),
+    db.Column('user_id', db.Integer, db.ForeignKey('users.user_id'))
 )
 
 class Search(db.Model):
@@ -12,13 +19,12 @@ class Search(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String())
     terms = db.Column(db.String())
-    email = db.Column(db.String())
     lbc_entries = db.relationship('LBCentry', secondary=search_entry_links, backref=db.backref('searches'))
 
-    def __init__(self, title, terms, email):
+    def __init__(self, title, terms, user_id):
         self.title = title
         self.terms = terms
-        self.email = email
+        self.users.append(current_user)
 
     def __repr__(self):
         return '<id {}>'.format(self.id)
@@ -46,12 +52,14 @@ class LBCentry(db.Model):
         
 class User(db.Model):
     __tablename__ = "users"
+
     id = db.Column('user_id',db.Integer , primary_key=True)
     username = db.Column('username', db.String(20), unique=True , index=True)
     password = db.Column('password' , db.String(10))
     email = db.Column('email',db.String(50),unique=True , index=True)
     registered_on = db.Column('registered_on' , db.DateTime)
- 
+    searches = db.relationship("Search", secondary=search_user_links, backref=db.backref('users'))
+
     def __init__(self , username ,password , email):
         self.username = username
         self.password = password
