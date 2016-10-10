@@ -1,7 +1,7 @@
 from app import db
 from datetime import datetime
 
-entries = db.Table('entries',
+search_entry_links = db.Table('search_entry_links',
     db.Column('search_id', db.Integer, db.ForeignKey('searches.id')),
     db.Column('lbc_entry_id', db.Integer, db.ForeignKey('lbc_entries.id'))
 )
@@ -13,7 +13,7 @@ class Search(db.Model):
     title = db.Column(db.String())
     terms = db.Column(db.String())
     email = db.Column(db.String())
-    lbc_entries = db.relationship('LBCentry', secondary=entries, backref=db.backref('searches'))
+    lbc_entries = db.relationship('LBCentry', secondary=search_entry_links, backref=db.backref('searches'))
 
     def __init__(self, title, terms, email):
         self.title = title

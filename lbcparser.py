@@ -14,7 +14,7 @@ def parselbc(id):
     with app.test_request_context():
         search = Search.query.get(id)
         existing_ids = [e.linkid for e in search.lbc_entries]
-        proxy = random.choice(app.config['PROXIES'])
+        # proxy = random.choice(app.config['PROXIES'])
     
         url = "/".join([app.config['LBCURL'],search.terms])
 

@@ -8,7 +8,7 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     #todo : automatically manage list
-    PROXIES = ['http://elitesurfingproxy.appspot.com/','http://unblockwebsitesproxy.appspot.com','http://bestsurfing1.appspot.com/','http://getwebaddress.appspot.com/','https://techbum-server.appspot.com/','http://proxy-4-web.appspot.com','http://unlimit-proxy.appspot.com/','http://browsewebfastly.appspot.com/']
+    # PROXIES = ['http://elitesurfingproxy.appspot.com/','http://unblockwebsitesproxy.appspot.com','http://bestsurfing1.appspot.com/','http://getwebaddress.appspot.com/','https://techbum-server.appspot.com/','http://proxy-4-web.appspot.com','http://unlimit-proxy.appspot.com/','http://browsewebfastly.appspot.com/']
     LBCURL = "https://www.leboncoin.fr"
     MAIL_SERVER ='smtp.gmail.com'
     MAIL_PORT = 465
