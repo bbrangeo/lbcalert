@@ -34,7 +34,7 @@ def remove_search():
 @app.route('/analyse')
 def analyse_lbc():
     job = q.enqueue_call(
-        func=parselbc, args=(request.args['id'],), result_ttl=0
+        func=parselbc, args=(request.args['id'],1), result_ttl=0
     )
     flash('Search added to parse queue:'+job.get_id())
     return redirect(url_for('show_searches'))

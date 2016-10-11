@@ -6,31 +6,58 @@ import requests
 import re
 import sys
 import os
+import json
 
 from app import app, db, q
 from models import Search, LBCentry
 
-def parselbc(id):
+def list_items(url, proxy=None):
+    if proxy is not None:
+        r = requests.get(url, proxies = {"https":proxy})
+    else:
+        r = requests.get(url)
+    
+    html = r.text
+    soup = BeautifulSoup(html,"html.parser")     
+
+    section = soup.find("section",{"class":"mainList"})
+    links = section.findAll("a",{"class":"list_item"})
+
+    parsed_links = []
+
+    for link in links:
+        listid = int(json.loads(link["data-info"])["ad_listid"])
+        title = link['title'].strip()
+        pricediv = link.find("h3",{"class":"item_price"})
+        price = "" 
+        if pricediv:
+            m = re.match("(\d+)",pricediv.text.strip())
+            price  = int(m.group(1))
+        supp = [' '.join(s.text.split()) for s in link.findAll("p",{"class":"item_supp"})]
+        category = supp[0]
+        location = supp[1]
+        time = supp[2]
+        parsed_links.append({
+            "listid": listid,
+            "title"
+            })
+
+    return links
+
+def parselbc(id, page):
     with app.test_request_context():
         search = Search.query.get(id)
-        existing_ids = [e.linkid for e in search.lbc_entries]
-        # proxy = random.choice(app.config['PROXIES'])
-    
+   
         url = "/".join([app.config['LBCURL'],search.terms])
 
-        proxies = {"https":app.config['PROXY_URL']}        
-
-        r = requests.get(url, proxies = proxies)
-        html = r.text
-        soup = BeautifulSoup(html,"html.parser")     
-
         try:
-            section = soup.find("section",{"class":"mainList"})
-            links = section.findAll("a",{"class":"list_item"})
+            links = list_items(url, app.config['PROXY_URL'])
         except:
-            print(sys.exc_info(), r)
+            print(sys.exc_info())
             return id
     
+        existing_ids = [e.linkid for e in search.lbc_entries]
+
         newitems=[]
         for link in links:
             linkid = int(link['href'].split('/')[-1].split('.')[0])
@@ -71,5 +98,8 @@ def refresh_searches():
     searches = Search.query.all()
     for search in searches:
         job = q.enqueue_call(
-            func=parselbc, args=(search.id,), result_ttl=0
+            func=parselbc, args=(search.id,1), result_ttl=0
         )
+
+if __name__=="__main__":
+    list_items("https://www.leboncoin.fr/annonces/offres/ile_de_france/")
