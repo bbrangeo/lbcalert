@@ -7,6 +7,7 @@ import re
 import sys
 import os
 import json
+import dateparser
 
 from app import app, db, q
 from models import Search, LBCentry
@@ -23,22 +24,25 @@ def list_items(url, proxy=None):
     section = soup.find("section",{"class":"mainList"})
     links = section.findAll("a",{"class":"list_item"})
 
-    parsed_links = []
+    listings = []
 
     for link in links:
         listid = int(json.loads(link["data-info"])["ad_listid"])
         title = link['title'].strip()
         pricediv = link.find("h3",{"class":"item_price"})
-        price = "" 
+        price = None
         if pricediv:
             m = re.match("(\d+)",pricediv.text.strip())
             price  = int(m.group(1))
         supp = [' '.join(s.text.split()) for s in link.findAll("p",{"class":"item_supp"})]
         category = supp[0]
         location = supp[1]
-        time = supp[2]
+        time = dateparser.parse(supp[2])
         
-    return links
+        a = LBCentry(linkid=listid,title=title,category=category,price=price,time=time,location=location)
+        listings.append(a)
+        
+    return listings
 
 def parselbc(id, page):
     with app.test_request_context():
@@ -47,39 +51,26 @@ def parselbc(id, page):
         url = "/".join([app.config['LBCURL'],search.terms])
 
         try:
-            links = list_items(url, app.config['PROXY_URL'])
+            listings = list_items(url, app.config['PROXY_URL'])
         except:
             print(sys.exc_info())
             return id
     
         existing_ids = [e.linkid for e in search.lbc_entries]
 
-        newitems=[]
-        for link in links:
-            linkid = int(link['href'].split('/')[-1].split('.')[0])
-            #test if id already found in this search
-            if linkid in existing_ids:
+        for listing in listings:
+            if listing.linkid in existing_ids:
                 break
             else:
-                #TODO actually parse category
-                category = "category"
-                title = link['title'].strip()
-                a = LBCentry(linkid=linkid,title=title,category=category)
-                pricediv = link.find("h3",{"class":"item_price"})
-                if pricediv:
-                    m = re.match("(\d+)",pricediv.text.strip())
-                    price  = int(m.group(1))
-                    a.price=price
-                db.session.add(a)
-                search.lbc_entries.append(a)
-                newitems.append(a)
+                db.session.add(listing)
+                search.lbc_entries.append(listing)
         db.session.commit()
 
         # r = requests.get(url_for("show_searches",_external=True))
-        if len(newitems)>0:
+        if len(listings)>0:
             mail=Mail(app)
             msg = Message('[LBCbot - '+app.config["VERSION"]+'] New items for "'+search.title+'"', sender='lbcbot@gmail.com', recipients=[user.email for user in search.users])
-            msg.html = render_template('email_entries.html', lbcentries=newitems)
+            msg.html = render_template('email_entries.html', lbcentries=listings)
             mail.send(msg)
         return id
         
