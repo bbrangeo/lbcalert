@@ -57,20 +57,22 @@ def parselbc(id, page):
             return id
     
         existing_ids = [e.linkid for e in search.lbc_entries]
-
+        
+        new_items = []
         for listing in listings:
             if listing.linkid in existing_ids:
                 break
             else:
                 db.session.add(listing)
                 search.lbc_entries.append(listing)
+                new_items.append(listing)
         db.session.commit()
 
         # r = requests.get(url_for("show_searches",_external=True))
-        if len(listings)>0:
+        if len(new_items)>0:
             mail=Mail(app)
             msg = Message('[LBCbot - '+app.config["VERSION"]+'] New items for "'+search.title+'"', sender='lbcbot@gmail.com', recipients=[user.email for user in search.users])
-            msg.html = render_template('email_entries.html', lbcentries=listings)
+            msg.html = render_template('email_entries.html', lbcentries=new_items)
             mail.send(msg)
         return id
         
