@@ -16,22 +16,26 @@ class Config(object):
     MAIL_USE_SSL = True
     #todo : hide this (and change password)
     MAIL_USERNAME = 'lbcbot@gmail.com'
-    MAIL_PASSWORD = 's7y9QSGbKPXU'
+    MAIL_PASSWORD = 'cdqqmmfuynezoigr'
     PROXY_URL = os.getenv('PROXY_URL')
 
 class ProductionConfig(Config):
     DEBUG = False
     SERVER_NAME = "lbcalert-pro.herokuapp.com"
+    VERSION = "PROD"
 
 class StagingConfig(Config):
     DEVELOPMENT = True
     DEBUG = True
     SERVER_NAME = "lbcalert-stage.herokuapp.com"
+    VERSION = "STAGE"
 
 class DevelopmentConfig(Config):
     DEVELOPMENT = True
-    DEBUG = False
-    SERVER_NAME = "localhost:8080"
+    DEBUG = True
+    SERVER_NAME = "lbcalert-naimo.c9users.io:8080"
+    VERSION = "DEV"
+
 
 class TestingConfig(Config):
     TESTING = True

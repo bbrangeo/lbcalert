@@ -55,7 +55,7 @@ def parselbc(id):
         # r = requests.get(url_for("show_searches",_external=True))
         if len(newitems)>0:
             mail=Mail(app)
-            msg = Message('[LBCbot] New items for "'+search.title+'"', sender='lbcbot@gmail.com', recipients=[user.email for user in search.users])
+            msg = Message('[LBCbot - '+app.config["VERSION"]+'] New items for "'+search.title+'"', sender='lbcbot@gmail.com', recipients=[user.email for user in search.users])
             msg.html = render_template('email_entries.html', lbcentries=newitems)
             mail.send(msg)
         return id

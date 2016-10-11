@@ -1,10 +1,14 @@
 #!/bin/bash
 
+## run with "source"
+
 sudo add-apt-repository ppa:chris-lea/redis-server
 
 sudo apt-get update
 sudo apt-get install build-essential postgresql postgresql-contrib redis-server
 sudo apt-get install libpq-dev python3-dev python3-pip
+
+sudo service postgresql start
 
 sudo pip install --upgrade virtualenv
 sudo pip install --upgrade virtualenvwrapper
@@ -22,6 +26,7 @@ echo 'export DATABASE_URL="postgresql:///lbcalert_dev"' >>  ~/.virtualenvs/lbcal
 workon lbcalert
 
 pip install -r requirements.txt
+
 
 sudo su - postgres <<WRAP
 createuser -d $USER
