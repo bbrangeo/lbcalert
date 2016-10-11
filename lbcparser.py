@@ -37,11 +37,7 @@ def list_items(url, proxy=None):
         category = supp[0]
         location = supp[1]
         time = supp[2]
-        parsed_links.append({
-            "listid": listid,
-            "title"
-            })
-
+        
     return links
 
 def parselbc(id, page):
