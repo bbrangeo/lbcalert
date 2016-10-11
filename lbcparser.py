@@ -39,7 +39,29 @@ def list_items(url, proxy=None):
         location = supp[1]
         time = dateparser.parse(supp[2])
         
-        a = LBCentry(linkid=listid,title=title,category=category,price=price,time=time,location=location)
+        imagespan = link.find("span",{"class":"item_imagePic"}).find("span")
+        imagenumberspan = link.find("span",{"class":"item_imageNumber"})
+        if imagespan:
+            imgurl = imagespan["data-imgsrc"][2:]
+            imgnumber = int(imagenumberspan.text.strip())
+        else:
+            imgurl = None
+            imgnumber = None
+
+        params={
+            "linkid":listid,
+            "title":title,
+            "category":category,
+            "price":price,
+            "time":time,
+            "location":location,
+            "imgurl":imgurl,
+            "imgnumber":imgnumber,
+        }        
+
+        print(params)
+        
+        a = LBCentry(**params)
         listings.append(a)
         
     return listings
@@ -91,4 +113,4 @@ def refresh_searches():
         )
 
 if __name__=="__main__":
-    list_items("https://www.leboncoin.fr/annonces/offres/ile_de_france/")
+    print(list_items("https://www.leboncoin.fr/annonces/offres/ile_de_france/"))

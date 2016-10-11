@@ -39,16 +39,14 @@ class LBCentry(db.Model):
     location = db.Column(db.String())
     time = db.Column(db.DateTime)    
     price = db.Column(db.Integer)
+    imgurl = db.Column(db.String())
+    imgnumber = db.Column(db.Integer)
     new = db.Column(db.Boolean)
 
-    def __init__(self, title, category, linkid, price, location, time):
-        self.linkid = linkid
-        self.title = title
-        self.category = category
-        self.price = price
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
         self.new = True
-        self.location = location
-        self.time = time
 
     def __repr__(self):
         return '<linkid {}>'.format(self.linkid)

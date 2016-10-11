@@ -1,8 +1,10 @@
 <!doctype html>
 <p>
 {% for lbcentry in lbcentries %}
-<a href="{{ config['LBCURL'] }}/{{ lbcentry.category }}/{{ lbcentry.linkid }}.htm">{{ lbcentry.title }}{% if lbcentry.price %} - {{ lbcentry.price }}{% endif %}</a><br>
-{% else %}
-<em>No entries</em>
+<a href="{{ config['LBCURL'] }}/{{ lbcentry.category }}/{{ lbcentry.linkid }}.htm">
+    {{ lbcentry.title }}
+    {% if lbcentry.price %} - {{ lbcentry.price }}{% endif %}
+</a>
+<br>
 {% endfor %}
 </p>

@@ -4,8 +4,7 @@
 {% block body %}
   <p class=entries>
   {% for lbcentry in lbcentries %}
-    <a href="{{ config['LBCURL'] }}/{{ lbcentry.category }}/{{ lbcentry.linkid }}.htm">{{ lbcentry.title }}{% if lbcentry.price %} - {{ lbcentry.price }}{% endif %}</a>
-        {% if lbcentry.new %} - NEW !!{% endif %}<br>
+    {% if lbcentry.new %} # {% endif %}<a href="{{ config['LBCURL'] }}/{{ lbcentry.category }}/{{ lbcentry.linkid }}.htm">{{ lbcentry.title }}{% if lbcentry.price %} - {{ lbcentry.price }}{% endif %}</a><br>
   {% else %}
     <em>No entries</em>
   {% endfor %}
