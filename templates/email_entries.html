@@ -1,7 +1,7 @@
 <!doctype html>
 <p>
 {% for lbcentry in lbcentries %}
-<a href="{{ config['LBCURL'] }}/vi/{{ lbcentry.category }}/{{ lbcentry.linkid }}.htm">
+<a href="{{ config['LBCURL'] }}/vi/{{ lbcentry.linkid }}.htm">
     {{ lbcentry.title }}
     {% if lbcentry.price %} - {{ lbcentry.price }}{% endif %}
 </a>
