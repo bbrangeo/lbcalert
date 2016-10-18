@@ -21,6 +21,14 @@ def list_items(url, proxy=None):
     html = r.text
     soup = BeautifulSoup(html,"html.parser")     
 
+    category_input = soup.find("span",{"id":"searchboxToggleCategory"})
+    if category_input.text != "Toutes catégories":
+        page_category = category_input.text.strip()
+    else:
+        page_category = None
+        
+    print(page_category)
+
     section = soup.find("section",{"class":"mainList"})
     links = section.findAll("a",{"class":"list_item"})
 
@@ -35,7 +43,11 @@ def list_items(url, proxy=None):
             m = re.match("(\d+)",pricediv.text.strip())
             price  = int(m.group(1))
         supp = [' '.join(s.text.split()) for s in link.findAll("p",{"class":"item_supp"})]
-        category = supp[0]
+        if page_category is not None:
+            category = page_category
+        else:
+            category = supp[0]
+            
         location = supp[1]
         time = dateparser.parse(supp[2])
         
@@ -60,10 +72,9 @@ def list_items(url, proxy=None):
         }        
 
         print(params)
-        
+
         a = LBCentry(**params)
         listings.append(a)
-        
     return listings
 
 def parselbc(id, page):
@@ -71,7 +82,7 @@ def parselbc(id, page):
         search = Search.query.get(id)
    
         url = "/".join([app.config['LBCURL'],search.terms])
-
+        print(url)
         try:
             listings = list_items(url, app.config['PROXY_URL'])
         except:
@@ -113,4 +124,4 @@ def refresh_searches():
         )
 
 if __name__=="__main__":
-    print(list_items("https://www.leboncoin.fr/annonces/offres/ile_de_france/"))
+    print(list_items("https://www.leboncoin.fr/velos/offres/ile_de_france/?th=1&q=twin%20original%20or%20twin%20elops%20or%20btwin%20original%20or%20btwin%20elops&parrot=0&pe=9"))

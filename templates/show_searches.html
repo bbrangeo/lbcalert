@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block body %}
-    <form action="{{ url_for('add_search') }}" method=post class=add-search>
+    <form action="{{ url_for('add_search') }}" method=post class="add-search">
     Title:<br>
     <input type=text size=30 name=title>
     <br>
@@ -9,7 +9,7 @@
     <br>
     <input type=submit value=Add>
     </form>
-  <p class=entries>
+  <p class="entries">
   {% for search in searches %}
     <br><a href="{{ url_for('show_lbcentries') }}?id={{ search.s.id }}">{{ search.s.title }}</a> - <em>{{ search.s.terms }}</em>
     <br> Send e-mail to : {{ search.s.email }}
