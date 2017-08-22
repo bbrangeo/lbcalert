@@ -42,7 +42,7 @@ class Search(db.Model):
         base_url = "https://mobile.leboncoin.fr/templates/api/list.json?&app_id=leboncoin_android&key=d2c84cdd525dddd7cbcc0d0a86609982c2c59e22eb01ee4202245b7b187f49f1546e5f027d48b8d130d9aa918b29e991c029f732f4f8930fc56dbea67c5118ce"
         url = base_url + "&q=" + self.terms
         if self.category is not None:
-            url = base_url + "&c=" + str(self.category)
+            url = url + "&c=" + str(self.category)
         return url
 
 class LBCentry(db.Model):
