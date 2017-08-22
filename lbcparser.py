@@ -1,6 +1,6 @@
 from flask import url_for, render_template, flash
 from flask.ext.mail import Mail, Message
-from bs4 import BeautifulSoup
+
 import random
 import requests
 import re
@@ -9,56 +9,51 @@ import os
 import json
 import dateparser
 
+from flask.ext.login import login_user
 from app import app, db, q
-from models import Search, LBCentry
+from models import User, Search, LBCentry
+
+
+# ps, pe, mrs, rs, ms, ccs, sqs, ros, cs, bros
+# f a(all) p(private) c(company)
+# c = category number
+# zipcode = zipcode
+# q = query
+# o = page
+# w ?
+# ca ?
+# ps - pe price range(categories)
+# rs - re year range
+# ms - me km range
+# ccs - cce cylindre
+
 
 def list_items(url, proxy=None):
     if proxy is not None:
         r = requests.get(url, proxies = {"https":proxy})
     else:
         r = requests.get(url)
-    
-    html = r.text
-    soup = BeautifulSoup(html,"html.parser")     
 
-    category_input = soup.find("span",{"id":"searchboxToggleCategory"})
-    if category_input.text != "Toutes catégories":
-        page_category = category_input.text.strip()
-    else:
-        page_category = None
-        
-    print(page_category)
-
-    section = soup.find("section",{"class":"mainList"})
-    links = section.findAll("a",{"class":"list_item"})
+    ads = r.json()['ads']
 
     listings = []
 
-    for link in links:
-        listid = int(json.loads(link["data-info"])["ad_listid"])
-        title = link['title'].strip()
-        pricediv = link.find("h3",{"class":"item_price"})
-        price = None
-        if pricediv:
-            m = re.match("(\d+)",pricediv.text.strip())
-            price  = int(m.group(1))
-        supp = [' '.join(s.text.split()) for s in link.findAll("p",{"class":"item_supp"})]
-        if page_category is not None:
-            category = page_category
+    for ad in ads:
+        listid = int(ad['list_id'])
+        title = ad['subject']
+        price = ad['price']
+        if (price == ''):
+            price = None
         else:
-            category = supp[0]
-            
-        location = supp[1]
-        time = dateparser.parse(supp[2])
-        
-        imagespan = link.find("span",{"class":"item_imagePic"}).find("span")
-        imagenumberspan = link.find("span",{"class":"item_imageNumber"})
-        if imagespan:
-            imgurl = imagespan["data-imgsrc"][2:]
-            imgnumber = int(imagenumberspan.text.strip())
-        else:
-            imgurl = None
-            imgnumber = None
+            price = int(price.replace(" ",""))
+        category = int(ad['category_id'])
+
+        location = ad['region_name'] + ' - ' + \
+                   ad['dpt_name'] + ' - ' + \
+                   ad['city'] + ' (' + ad['zipcode'] + ')'
+        time = dateparser.parse(ad['date'])
+        imgurl = None
+        imgnumber = None
 
         params={
             "linkid":listid,
@@ -69,7 +64,7 @@ def list_items(url, proxy=None):
             "location":location,
             "imgurl":imgurl,
             "imgnumber":imgnumber,
-        }        
+        }
 
         print(params)
 
@@ -80,17 +75,17 @@ def list_items(url, proxy=None):
 def parselbc(id, page):
     with app.test_request_context():
         search = Search.query.get(id)
-   
-        url = "/".join([app.config['LBCURL'],search.terms])
+
+        url = search.get_url()
         print(url)
         try:
             listings = list_items(url, app.config['PROXY_URL'])
         except:
             print(sys.exc_info())
             return id
-    
+
         existing_ids = [e.linkid for e in search.lbc_entries]
-        
+
         new_items = []
         for listing in listings:
             if listing.linkid in existing_ids:
@@ -108,7 +103,7 @@ def parselbc(id, page):
             msg.html = render_template('email_entries.html', lbcentries=new_items)
             mail.send(msg)
         return id
-        
+
 def task():
     ping_heroku()
     refresh_searches()
@@ -124,4 +119,6 @@ def refresh_searches():
         )
 
 if __name__=="__main__":
-    print(list_items("https://www.leboncoin.fr/velos/offres/ile_de_france/?th=1&q=twin%20original%20or%20twin%20elops%20or%20btwin%20original%20or%20btwin%20elops&parrot=0&pe=9"))
+    search = Search(title = "test", terms = "test", user=None)
+    url = search.get_url()
+    list_items(url)
