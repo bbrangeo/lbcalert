@@ -4,17 +4,26 @@
     Title:<br>
     <input type=text size=30 name=title>
     <br>
-    Search terms (copy from address bar, anything after "leboncoin.fr/", example : "telephonie/offres/ile_de_france/"):<br>
+    Search terms<br>
     <input type=text size=50 name=terms>
+    <br>
+    Category
+    <br>
+    <select name="category">
+	<option label=" "></option>
+        {% for cat_id, cat_name in categories.items()%}
+	<option value={{cat_id}}>{{cat_name}}</option>
+	{% endfor %}
+    </select>
     <br>
     <input type=submit value=Add>
     </form>
   <p class="entries">
   {% for search in searches %}
-    <br><a href="{{ url_for('show_lbcentries') }}?id={{ search.s.id }}">{{ search.s.title }}</a> - <em>{{ search.s.terms }}</em>
+  <br>{% if search.s.category is not none %} [{{ categories[search.s.category]}}] {% endif %}<a href="{{ url_for('show_lbcentries') }}?id={{ search.s.id }}">{{ search.s.title }}</a> - <em>{{ search.s.terms }}</em>
     <br> Send e-mail to : {{ search.s.email }}
     <br><a href="{{ url_for('analyse_lbc') }}?id={{ search.s.id }}">Execute</a> - <a href="/remove?id={{ search.s.id }}">remove</a><br>
-    {{ search.nbentries }} results{% if search.nbnew>0%} - {{ search.nbnew }} new{% endif %} <br>
+    {{ search.nbentries }} results{% if search.nbnew>0 %} - {{ search.nbnew }} new{% endif %} <br>
   {% else %}
     <em>No searches here so far</em>
   {% endfor %}
