@@ -79,6 +79,15 @@ def register():
     flash('User successfully registered')
     return redirect(url_for('login'))
 
+@app.route('/deregister' , methods=['GET'])
+@login_required
+def deregister():
+    db.session.delete(current_user)
+    db.session.commit()
+    flash('User successfully deregistered')
+    return redirect(url_for('login'))
+
+
 @app.route('/login',methods=['GET','POST'])
 def login():
     if request.method == 'GET':

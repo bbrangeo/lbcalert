@@ -4,12 +4,17 @@
 <div class=page>
   <a href="/"><h1>LBCAlert</h1></a>
   {% if current_user.is_authenticated %}
-    <a href="/logout">Sign out</a>
+    {{current_user.username}} - 
+    {{current_user.email}}
+    <a href="/logout">Sign out</a> 
+    <a href="/deregister">(Delete user)</a>
   {% else %}
     <a href="/register">Sign up</a>
   {% endif %}
+  <br>
   {% for message in get_flashed_messages() %}
     <div class=flash>{{ message }}</div>
   {% endfor %}
+  <br>
   {% block body %}{% endblock %}
 </div>
