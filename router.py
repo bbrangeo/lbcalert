@@ -5,25 +5,17 @@ from app import app, db, q
 from models import Search, LBCentry
 from lbcparser import parselbc
 from models import User
-from Categories import categories
 
 @app.route('/')
 @login_required
 def show_searches():
     searches = current_user.searches
     searches = [{"s":s, "nbentries":len(s.lbc_entries), "nbnew":len([e for e in s.lbc_entries if e.new])} for s in searches]
-    return render_template('show_searches.html', searches=searches, categories=categories)
+    return render_template('show_searches.html', searches=searches)
 
 @app.route('/add', methods=['POST'])
 def add_search():
-    title=request.form['title']
-    terms=request.form['terms']
-    category=request.form['category']
-    if category == '':
-        category = None
-    else:
-        category = int(category)
-    search = Search(title = title, terms = terms, category = category, minprice = 0, maxprice = None)
+    search = Search(title=request.form['title'], terms=request.form['terms'], user_id=current_user.id)
     db.session.add(search)
     db.session.commit()
     flash('New search was successfully posted')
@@ -68,7 +60,7 @@ def show_lbcentries():
         e.new = False
     db.session.commit()
     return html
-
+    
 @app.route('/register' , methods=['GET','POST'])
 def register():
     if request.method == 'GET':
@@ -78,7 +70,7 @@ def register():
     db.session.commit()
     flash('User successfully registered')
     return redirect(url_for('login'))
-
+ 
 @app.route('/login',methods=['GET','POST'])
 def login():
     if request.method == 'GET':
@@ -92,8 +84,8 @@ def login():
     login_user(registered_user)
     flash('Logged in successfully')
     return redirect(request.args.get('next') or url_for('show_searches'))
-
+    
 @app.route('/logout')
 def logout():
     logout_user()
-    return redirect(url_for('show_searches'))
+    return redirect(url_for('show_searches')) 
