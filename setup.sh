@@ -10,12 +10,11 @@ sudo apt-get install libpq-dev python3-dev python3-pip
 
 sudo service postgresql start
 
-sudo pip3 install --upgrade virtualenv
-sudo pip3 install --upgrade virtualenvwrapper
+sudo pip install --upgrade virtualenv
+sudo pip install --upgrade virtualenvwrapper
 
 echo 'export WORKON_HOME=$HOME/.virtualenvs' >> ~/.bashrc
 echo 'export PROJECT_HOME=$HOME/Devel' >> ~/.bashrc
-echo 'export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3' >> ~/.bashrc
 echo 'source /usr/local/bin/virtualenvwrapper.sh' >> ~/.bashrc
 
 source ~/.bashrc
@@ -31,7 +30,6 @@ pip install -r requirements.txt
 
 sudo su - postgres <<WRAP
 createuser -d $USER
-psql -c 'alter user naimon with createdb'
 WRAP
 createdb -E UTF8 -T template0 lbcalert_dev
 

@@ -33,7 +33,7 @@ class StagingConfig(Config):
 class DevelopmentConfig(Config):
     DEVELOPMENT = True
     DEBUG = True
-    SERVER_NAME = "localhost:8080"
+    SERVER_NAME = "lbcalert-naimo.c9users.io:8080"
     VERSION = "DEV"
 
 
