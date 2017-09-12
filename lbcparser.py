@@ -89,9 +89,11 @@ def parselbc(id, page):
         for listing in listings:
             if listing.linkid in existing_ids:
                 break
-            elif search.minprice is not None and listing.price < search.minprice:
+            elif search.minprice is not None and \
+                 listing.price is not None and listing.price < search.minprice:
                 continue
-            elif search.maxprice is not None and listing.price > search.maxprice:
+            elif search.maxprice is not None and \
+                 listing.price is not None and listing.price > search.maxprice:
                 continue
             else:
                 db.session.add(listing)
