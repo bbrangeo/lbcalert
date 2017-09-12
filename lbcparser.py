@@ -49,8 +49,8 @@ def list_items(url, proxy=None):
         category = int(ad['category_id'])
 
         location = ad['region_name'] + ' - ' + \
-                   ad['dpt_name'] + ' - ' + \
                    ad['city'] + ' (' + ad['zipcode'] + ')'
+#                   ad['dpt_name'] + ' - ' + \
         time = dateparser.parse(ad['date'])
         imgurl = None
         imgnumber = None
@@ -66,7 +66,7 @@ def list_items(url, proxy=None):
             "imgnumber":imgnumber,
         }
 
-        print(params)
+        #print(params)
 
         a = LBCentry(**params)
         listings.append(a)
@@ -85,11 +85,14 @@ def parselbc(id, page):
             return id
 
         existing_ids = [e.linkid for e in search.lbc_entries]
-
         new_items = []
         for listing in listings:
             if listing.linkid in existing_ids:
                 break
+            elif search.minprice is not None and listing.price < search.minprice:
+                continue
+            elif search.maxprice is not None and listing.price > search.maxprice:
+                continue
             else:
                 db.session.add(listing)
                 search.lbc_entries.append(listing)

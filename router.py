@@ -19,11 +19,21 @@ def add_search():
     title=request.form['title']
     terms=request.form['terms']
     category=request.form['category']
+    maxprice=request.form['maxprice']
+    minprice=request.form['minprice']
     if category == '':
         category = None
     else:
         category = int(category)
-    search = Search(title = title, terms = terms, category = category, minprice = 0, maxprice = None)
+    if minprice == '':
+        minprice = None
+    else:
+        minprice = int(minprice)
+    if maxprice == '':
+        maxprice = None
+    else:
+        maxprice = int(maxprice)
+    search = Search(title = title, terms = terms, category = category, minprice = minprice, maxprice = maxprice)
     db.session.add(search)
     db.session.commit()
     flash('New search was successfully posted')
