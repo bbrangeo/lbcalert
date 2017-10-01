@@ -24,6 +24,7 @@ def add_search():
     maxprice=request.form['maxprice']
     minprice=request.form['minprice']
     zipcode=re.findall("[0-9]{5}",request.form['zipcode'])
+    extras = request.form['extras']
     if category == '':
         category = None
     else:
@@ -40,6 +41,8 @@ def add_search():
         zipcode = None
     else:
         zipcode = ','.join(zipcode)
+    if extras == '':
+        extras = None
     search = Search(
             title = title, 
             terms = terms, 
@@ -47,7 +50,8 @@ def add_search():
             minprice = minprice, 
             maxprice = maxprice,
             vendor = request.form['type'],
-            zipcode = zipcode)
+            zipcode = zipcode,
+            extras = extras)
     db.session.add(search)
     db.session.commit()
     flash('New search was successfully posted')

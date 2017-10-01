@@ -26,7 +26,8 @@ class Search(db.Model):
     lbc_entries = db.relationship('LBCentry', secondary=search_entry_links, backref=db.backref('searches'))
     vendor = db.Column(db.String())
     zipcode = db.Column(db.String())
-
+    extras = db.Column(db.String())
+    
     def __init__(
             self, 
             title = "", 
@@ -36,6 +37,7 @@ class Search(db.Model):
             maxprice = None, 
             user = current_user,
             vendor = "p",
+            extras = None,
             zipcode = None):
         self.title = title
         self.terms = terms
@@ -49,6 +51,8 @@ class Search(db.Model):
             self.users.append(user)
         if zipcode is not None:
             self.zipcode = zipcode
+        if extras is not None:
+            self.extras = extras
 
     def __repr__(self):
         return '<id {}>'.format(self.id)
@@ -60,6 +64,8 @@ class Search(db.Model):
         if self.zipcode is not None:
             url = url + "&zipcode=" + self.zipcode
         url = url + "&f=" + self.vendor
+        if self.extras is not None:
+            url = url + self.extras
         return url
 
 class LBCentry(db.Model):
