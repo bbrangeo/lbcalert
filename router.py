@@ -7,6 +7,8 @@ from lbcparser import parselbc
 from models import User
 from Categories import categories
 
+import re
+
 @app.route('/')
 @login_required
 def show_searches():
@@ -21,6 +23,7 @@ def add_search():
     category=request.form['category']
     maxprice=request.form['maxprice']
     minprice=request.form['minprice']
+    zipcode=re.findall("[0-9]{5}",request.form['zipcode'])
     if category == '':
         category = None
     else:
@@ -33,7 +36,18 @@ def add_search():
         maxprice = None
     else:
         maxprice = int(maxprice)
-    search = Search(title = title, terms = terms, category = category, minprice = minprice, maxprice = maxprice)
+    if zipcode == []:
+        zipcode = None
+    else:
+        zipcode = ','.join(zipcode)
+    search = Search(
+            title = title, 
+            terms = terms, 
+            category = category, 
+            minprice = minprice, 
+            maxprice = maxprice,
+            vendor = request.form['type'],
+            zipcode = zipcode)
     db.session.add(search)
     db.session.commit()
     flash('New search was successfully posted')

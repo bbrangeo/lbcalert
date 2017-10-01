@@ -52,7 +52,13 @@ def list_items(url, proxy=None):
                    ad['city'] + ' (' + ad['zipcode'] + ')'
 #                   ad['dpt_name'] + ' - ' + \
         time = dateparser.parse(ad['date'])
-        imgurl = None
+        if "thumb_hd" in ad:
+            imgurl = ad['thumb_hd']
+        else:
+            imgurl = None
+        if "list_time" in ad:
+            time = ad['list_time']
+
         imgnumber = None
 
         params={

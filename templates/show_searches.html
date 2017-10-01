@@ -1,19 +1,28 @@
 {% extends "layout.html" %}
 {% block body %}
     <form action="{{ url_for('add_search') }}" method=post class="add-search">
-    Title<br>
+    Titre<br>
     <input type=text size=30 name=title>
     <br>
-    Search terms<br>
+    Mots cĺés<br>
     <input type=text size=50 name=terms>
     <br>
-    Min price<br>
+    Prix min<br>
     <input type=text size=5 name=minprice>
     <br>
-    Max price<br>
+    Prix max<br>
     <input type=text size=5 name=maxprice>
     <br>
-    Category
+    Vendeur<br>
+    <select name="type">
+	   <option value=a>Pro et Particulers</option>
+	   <option selected=selected value=p>Particuliers</option> 
+	   <option value=c>Professionels</option>
+    </select><br>
+    Code post. (ex "63000,63830")<br>
+    <input type=text size=50 name=zipcode>
+    <br>
+    Catégorie
     <br>
     <select name="category">
 	<option label=" "></option>

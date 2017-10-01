@@ -4,7 +4,9 @@
 <a href="{{ config['LBCURL'] }}/announce/{{ lbcentry.linkid }}.htm">
     {{ lbcentry.title }}
     {% if lbcentry.price %} - {{ lbcentry.price }}{% endif %}
+    {% if lbcentry.time %}  - {{ lbcentry.time }}{% endif %}
+    {% if lbcentry.imgurl %} <br><img src={{ lbcentry.imgurl }}>{% endif %}
 </a>
-<br>
+<br><br>
 {% endfor %}
 </p>
