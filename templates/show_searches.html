@@ -4,7 +4,7 @@
   <br>
   <p class="entries">
   {% for search in searches %}
-  <br>{% if search.s.category is not none %} [{{ categories[search.s.category]}}] {% endif %}<a href="{{ url_for('show_lbcentries') }}?id={{ search.s.id }}">{{ search.s.title }}</a> - <em>{{ search.s.terms }}</em>
+  <br>{{ search.s.id }} {% if search.s.category is not none %} [{{ categories[search.s.category]}}] {% endif %}<a href="{{ url_for('show_lbcentries') }}?id={{ search.s.id }}">{{ search.s.title }}</a> - <em>{{ search.s.terms }}</em>
     <br><a href="{{ url_for('analyse_lbc') }}?id={{ search.s.id }}">Execute</a> - <a href="/remove?id={{ search.s.id }}">remove</a><br>
     {{ search.nbentries }} results{% if search.nbnew>0 %} - {{ search.nbnew }} new{% endif %} <br>
   {% else %}

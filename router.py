@@ -65,11 +65,32 @@ def add_search():
 @app.route('/remove')
 def remove_search():
     search = Search.query.get(request.args['id'])
-    for entry in LBCentry.query.filter(LBCentry.searches.any(id=request.args['id'])).all():
-        db.session.delete(entry)
-    db.session.delete(search)
+    search.users.remove(current_user)
+    if len(search.users) == 0:
+        for entry in LBCentry.query.filter(LBCentry.searches.any(id=request.args['id'])).all():
+            entry.searches.remove(search)
+            if len(entry.searches) == 0:
+                db.session.delete(entry)
+        db.session.delete(search)
+        flash('Search deleted')
+    else:
+        flash('Search unlinked from user')
     db.session.commit()
     flash('Search was successfully deleted')
+    return redirect(url_for('show_searches'))
+
+@app.route('/join')
+def join_search():
+    searchid = request.args['id']
+    search = Search.query.get(searchid)
+    if search is None:
+        flash('No search with that id')
+    elif current_user not in search.users:
+        search.users.append(current_user)
+        db.session.commit()
+        flash('Joined search ' + str(searchid))
+    else:
+        flash('User already linked with search ' + str(searchid)) 
     return redirect(url_for('show_searches'))
 
 @app.route('/analyse')
