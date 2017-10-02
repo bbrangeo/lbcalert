@@ -13,49 +13,54 @@ import re
 @login_required
 def show_searches():
     searches = current_user.searches
+    if len(searches) == 0:
+        return redirect(url_for("add_search"))
     searches = [{"s":s, "nbentries":len(s.lbc_entries), "nbnew":len([e for e in s.lbc_entries if e.new])} for s in searches]
     return render_template('show_searches.html', searches=searches, categories=categories)
 
-@app.route('/add', methods=['POST'])
+@app.route('/add', methods=['GET','POST'])
 def add_search():
-    title=request.form['title']
-    terms=request.form['terms']
-    category=request.form['category']
-    maxprice=request.form['maxprice']
-    minprice=request.form['minprice']
-    zipcode=re.findall("[0-9]{5}",request.form['zipcode'])
-    extras = request.form['extras']
-    if category == '':
-        category = None
+    if request.method == "POST":
+        title=request.form['title']
+        terms=request.form['terms']
+        category=request.form['category']
+        maxprice=request.form['maxprice']
+        minprice=request.form['minprice']
+        zipcode=re.findall("[0-9]{5}",request.form['zipcode'])
+        extras = request.form['extras']
+        if category == '':
+            category = None
+        else:
+            category = int(category)
+        if minprice == '':
+            minprice = None
+        else:
+            minprice = int(minprice)
+        if maxprice == '':
+            maxprice = None
+        else:
+            maxprice = int(maxprice)
+        if zipcode == []:
+            zipcode = None
+        else:
+            zipcode = ','.join(zipcode)
+        if extras == '':
+            extras = None
+        search = Search(
+                title = title, 
+                terms = terms, 
+                category = category, 
+                minprice = minprice, 
+                maxprice = maxprice,
+                vendor = request.form['type'],
+                zipcode = zipcode,
+                extras = extras)
+        db.session.add(search)
+        db.session.commit()
+        flash('New search was successfully posted')
+        return redirect(url_for('show_searches'))
     else:
-        category = int(category)
-    if minprice == '':
-        minprice = None
-    else:
-        minprice = int(minprice)
-    if maxprice == '':
-        maxprice = None
-    else:
-        maxprice = int(maxprice)
-    if zipcode == []:
-        zipcode = None
-    else:
-        zipcode = ','.join(zipcode)
-    if extras == '':
-        extras = None
-    search = Search(
-            title = title, 
-            terms = terms, 
-            category = category, 
-            minprice = minprice, 
-            maxprice = maxprice,
-            vendor = request.form['type'],
-            zipcode = zipcode,
-            extras = extras)
-    db.session.add(search)
-    db.session.commit()
-    flash('New search was successfully posted')
-    return redirect(url_for('show_searches'))
+        return render_template("add_search.html", categories=categories)
 
 @app.route('/remove')
 def remove_search():
