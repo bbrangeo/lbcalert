@@ -58,7 +58,7 @@ class Search(db.Model):
         return '<id {}>'.format(self.id)
 
     def get_url(self):
-        url = app.config['BASE_URL'] + "&q=" + self.terms
+        url = app.config['BASE_URL'] + "list.json?" + "&q=" + self.terms
         if self.category is not None:
             url = url + "&c=" + str(self.category)
         if self.zipcode is not None:
@@ -66,7 +66,7 @@ class Search(db.Model):
         url = url + "&f=" + self.vendor
         if self.extras is not None:
             url = url + self.extras
-        return url
+        return url + "&app_id=" + app.config['APP_ID'] + "&key=" + app.config['API_KEY']
 
 class LBCentry(db.Model):
     __tablename__ = 'lbc_entries'
@@ -81,6 +81,7 @@ class LBCentry(db.Model):
     imgurl = db.Column(db.String())
     imgnumber = db.Column(db.Integer)
     new = db.Column(db.Boolean)
+    description = db.Column(db.String())
 
     def __init__(self, **kwargs):
         for key, value in kwargs.items():

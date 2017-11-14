@@ -8,6 +8,7 @@ import sys
 import os
 import json
 import dateparser
+import html
 
 from flask.ext.login import login_user
 from app import app, db, q
@@ -27,6 +28,9 @@ from models import User, Search, LBCentry
 # ms - me km range
 # ccs - cce cylindre
 
+def get_listing_url(linkid):
+    url = app.config['BASE_URL'] + "view.json?" + "ad_id=" + str(linkid)
+    return url + "&app_id=" + app.config['APP_ID'] + "&key=" + app.config['API_KEY']
 
 def list_items(url, proxy=None):
     if proxy is not None:
@@ -40,6 +44,19 @@ def list_items(url, proxy=None):
 
     for ad in ads:
         listid = int(ad['list_id'])
+
+        listing_url = get_listing_url(listid)
+        if proxy is not None:
+            r = requests.get(listing_url, proxies = {"https":proxy})
+        else:
+            r = requests.get(listing_url)
+
+        listing_json = r.json()
+        if 'body' in listing_json:
+            description = listing_json['body']
+        else:
+            description = ""
+
         title = ad['subject']
         price = ad['price']
         if (price == ''):
@@ -70,11 +87,13 @@ def list_items(url, proxy=None):
             "location":location,
             "imgurl":imgurl,
             "imgnumber":imgnumber,
+            "description": description
         }
 
         #print(params)
 
         a = LBCentry(**params)
+        print(a)
         listings.append(a)
     return listings
 
@@ -107,7 +126,6 @@ def parselbc(id, page):
                 new_items.append(listing)
         db.session.commit()
 
-        # r = requests.get(url_for("show_searches",_external=True))
         if len(new_items)>0:
             mail=Mail(app)
             msg = Message('[LBCbot - '+app.config["VERSION"]+'] New items for "'+search.title+'"', sender='lbcbot@gmail.com', recipients=[user.email for user in search.users])

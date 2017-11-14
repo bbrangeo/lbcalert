@@ -7,6 +7,10 @@
     {% if lbcentry.price %} - {{ lbcentry.price }}{% endif %}
     {% if lbcentry.imgurl %} <br><img src={{ lbcentry.imgurl }}>{% endif %}
 </a>
+{% if lbcentry.description %}
+<br> {{ lbcentry.description|safe }}    
+<br><br>
+{% endif %}
 <br><br>
 {% endfor %}
 </p>
