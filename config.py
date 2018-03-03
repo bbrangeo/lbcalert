@@ -15,7 +15,8 @@ class Config(object):
     #todo : hide this (and change password)
     MAIL_USERNAME = "lbcbot@gmail.com"
     MAIL_PASSWORD = "cdqqmmfuynezoigr"
-    PROXY_URL = os.getenv("PROXY_URL")
+    PROXY_URL = None
+    # PROXY_URL = os.getenv("PROXY_URL")
     BASE_URL = "https://mobile.leboncoin.fr/templates/api/"
     APP_ID = "leboncoin_android"
     API_KEY = "d2c84cdd525dddd7cbcc0d0a86609982c2c59e22eb01ee4202245b7b187f49f1546e5f027d48b8d130d9aa918b29e991c029f732f4f8930fc56dbea67c5118ce"
