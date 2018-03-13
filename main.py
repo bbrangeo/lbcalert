@@ -4,7 +4,8 @@ import login
 from lbcparser import task
 import router
 from scheduler import Scheduler
-scheduler = Scheduler(600, task)
+
+scheduler = Scheduler(60, task)
 scheduler.start()
 
 if __name__=="__main__":
