@@ -150,7 +150,9 @@ def ping_heroku():
     requests.get("http://"+app.config['SERVER_NAME'])
 
 def refresh_searches():
-    app.config['PROXY_URL'] = requests.get("https://gimmeproxy.com/api/getProxy?curl=true&protocol=socks5&maxCheckPeriod=100&minSpeed=200").content
+    # newproxy = requests.get("https://gimmeproxy.com/api/getProxy?curl=true&protocol=socks5&maxCheckPeriod=100&minSpeed=200").content
+    # print("setting proxy " + str(newproxy))
+    # app.config['PROXY_URL'] = str(newproxy)
     searches = Search.query.all()
     # Clear failed jobs
     with Connection(conn):
