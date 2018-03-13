@@ -5,13 +5,13 @@
   <p class="entries">
   {% for search in searches %}
   <br>
-  (id:{{ search.s.id }})
+  <!-- (id:{{ search.s.id }}) -->
   {% if search.s.category is not none %}[{{ categories[search.s.category]}}] {% endif %}
   <a href="{{ url_for('show_lbcentries') }}?id={{ search.s.id }}">{{ search.s.title }}</a>
    - <em>{{ search.s.terms }}</em><br>
   {{ search.nbentries }} results{% if search.nbnew>0 %} - {{ search.nbnew }} new{% endif %}
   <br>
-  <a href="{{ url_for('analyse_lbc') }}?id={{ search.s.id }}">Execute</a>
+  <a href="{{ url_for('analyse_lbc') }}?id={{ search.s.id }}">execute</a>
    - <a href="/remove?id={{ search.s.id }}">remove</a>
    - <a href="{{ url_for('edit_search') }}?id={{ search.s.id }}">edit</a>
   <br>
