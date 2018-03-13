@@ -12,6 +12,7 @@ import html
 
 from flask.ext.login import login_user
 from app import app, db, q
+from rq import get_failed_queue
 from models import User, Search, LBCentry
 
 
@@ -93,7 +94,7 @@ def list_items(url, proxy=None):
         #print(params)
 
         a = LBCentry(**params)
-        print(a)
+        print("[list_items]" + str(a))
         listings.append(a)
     return listings
 
@@ -102,7 +103,7 @@ def parselbc(id, page):
         search = Search.query.get(id)
 
         url = search.get_url()
-        print(url)
+        print("[parselbc]" + str(url))
         try:
             listings = list_items(url, app.config['PROXY_URL'])
         except:
@@ -142,6 +143,10 @@ def ping_heroku():
 
 def refresh_searches():
     searches = Search.query.all()
+    # Clear failed jobs
+    fq = get_failed_queue()
+    for job in fq.jobs:
+          print(job.exc_info)
     for search in searches:
         job = q.enqueue_call(
             func=parselbc, args=(search.id,1), result_ttl=0
