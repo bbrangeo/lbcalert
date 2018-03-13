@@ -48,12 +48,19 @@ def list_items(url, proxy=None):
         listid = int(ad['list_id'])
 
         listing_url = get_listing_url(listid)
+        
         if proxy is not None:
             r = requests.get(listing_url, proxies = {"https":proxy})
         else:
             r = requests.get(listing_url)
 
-        listing_json = r.json()
+        try :
+            listing_json = r.json()
+        except Exception as e:
+            print("[list_items] " + str(listing_url))
+            print("[list items] " + str(listid) + " skipped cause : " + str(e))
+            continue
+
         if 'body' in listing_json:
             description = listing_json['body']
         else:
