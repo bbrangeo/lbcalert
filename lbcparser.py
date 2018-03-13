@@ -35,6 +35,7 @@ def get_listing_url(linkid):
 
 def list_items(url, proxy=None):
     if proxy is not None:
+        print("[list_items] using proxy")
         r = requests.get(url, proxies = {"https":proxy})
     else:
         r = requests.get(url)
