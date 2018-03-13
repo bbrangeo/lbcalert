@@ -28,6 +28,8 @@ def add_search():
         minprice=request.form['minprice']
         zipcode=re.findall("[0-9]{5}",request.form['zipcode'])
         extras = request.form['extras']
+        search_id = request.form['search_id']
+
         if category == '':
             category = None
         else:
@@ -46,21 +48,55 @@ def add_search():
             zipcode = ','.join(zipcode)
         if extras == '':
             extras = None
-        search = Search(
-                title = title, 
-                terms = terms, 
-                category = category, 
-                minprice = minprice, 
-                maxprice = maxprice,
-                vendor = request.form['type'],
-                zipcode = zipcode,
-                extras = extras)
-        db.session.add(search)
+        
+        if search_id == "":
+            print("adding new search")
+            search = Search()
+        else:
+            print("updating search " + str(search_id))
+            search = Search.query.get(int(search_id))
+
+        search.title = title
+        search.terms = terms
+        search.category = category
+        search.minprice = minprice
+        search.maxprice = maxprice
+        search.vendor = request.form['type']
+        search.zipcode = zipcode
+        search.extras = extras
+
+        if search_id == "":
+            db.session.add(search)
         db.session.commit()
-        flash('New search was successfully posted')
+        flash('Search was successfully posted')
         return redirect(url_for('show_searches'))
     else:
         return render_template("add_search.html", categories=categories)
+
+@app.route('/edit', methods=['GET'])
+def edit_search():
+    search_id = request.args['id']
+    search = Search.query.get(request.args['id'])
+    title = search.title
+    terms = search.terms
+    minprice = search.minprice
+    maxprice = search.maxprice
+    vendor = search.vendor
+    category = search.category
+    zipcode = search.zipcode
+    extras = search.extras
+
+    return render_template("edit_search.html",
+                        categories=categories,
+                        title=title,
+                        terms=terms,
+                        category=category,
+                        minprice=minprice,
+                        maxprice=maxprice,
+                        vendor=vendor,
+                        zipcode=zipcode,
+                        extras=extras,
+                        search_id=search_id)
 
 @app.route('/remove')
 def remove_search():

@@ -1,36 +1,37 @@
 <form action="{{ url_for('add_search') }}" method=post class="add-search">
 Titre<br>
-<input type=text size=30 name=title>
+<input type=text size=30 name=title {% if title %}value="{{title}}"{%endif%}>
 <br>
 Mots cĺés<br>
-<input type=text size=50 name=terms>
+<input type=text size=50 name=terms {% if terms %}value="{{terms}}"{%endif%}>
 <br>
 Prix min<br>
-<input type=text size=5 name=minprice>
+<input type=text size=5 name=minprice {% if minprice %}value="{{minprice}}"{%endif%}>
 <br>
 Prix max<br>
-<input type=text size=5 name=maxprice>
+<input type=text size=5 name=maxprice {% if maxprice %}value="{{maxprice}}"{%endif%}>
 <br>
 Vendeur<br>
 <select name="type">
-       <option value=a>Pro et Particulers</option>
-       <option selected=selected value=p>Particuliers</option> 
-       <option value=c>Professionels</option>
+       <option {% if vendor == "a"%} selected="selected"{% endif %} value=a>Pro et Particulers</option>
+       <option {% if vendor == "p"%} selected="selected"{% endif %} value=p>Particuliers</option> 
+       <option {% if vendor == "c"%} selected="selected"{% endif %} value=c>Professionels</option>
 </select><br>
 Code post. (ex "63000,63830")<br>
-<input type=text size=50 name=zipcode>
+<input type=text size=50 name=zipcode {% if zipcode %}value="{{zipcode}}"{%endif%}>
 <br>
 Catégorie
 <br>
 <select name="category">
     <option label=" "></option>
     {% for cat_id, cat_name in categories.items()%}
-    <option value={{cat_id}}>{{cat_name}}</option>
+    <option value={{cat_id}} {% if cat_id == category%} selected="selected"{% endif %}>{{cat_name}}</option>
     {% endfor %}
 </select>
 <br>
 Paramètres URL supplémentaires (expert)<br>
-<input type=text size=30 name=extras>
+<input type=text size=30 name=extras {% if extras %}value="{{extras}}"{%endif%}>
 <br>
-<input type=submit value=Add>
+<input type="hidden" name="search_id" value="{{search_id}}">
+<input type=submit value=Confirm>
 </form>
