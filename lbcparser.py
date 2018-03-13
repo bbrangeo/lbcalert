@@ -11,8 +11,8 @@ import dateparser
 import html
 
 from flask.ext.login import login_user
-from app import app, db, q
-from rq import get_failed_queue
+from app import app, db, q, conn
+from rq import Connection, get_failed_queue
 from models import User, Search, LBCentry
 
 
@@ -35,7 +35,7 @@ def get_listing_url(linkid):
 
 def list_items(url, proxy=None):
     if proxy is not None and proxy != "":
-        print("[list_items] using proxy")
+        print("[list_items] using proxy " + proxy)
         r = requests.get(url, proxies = {"https":proxy})
     else:
         r = requests.get(url)
@@ -150,11 +150,14 @@ def ping_heroku():
     requests.get("http://"+app.config['SERVER_NAME'])
 
 def refresh_searches():
+    app.config['PROXY_URL'] = requests.get("https://gimmeproxy.com/api/getProxy?curl=true&protocol=socks5&maxCheckPeriod=100&minSpeed=200").content
     searches = Search.query.all()
     # Clear failed jobs
-    fq = get_failed_queue()
+    with Connection(conn):
+        fq = get_failed_queue()
     for job in fq.jobs:
-          print(job.exc_info)
+            print("delete job " + job.id)
+            job.delete()
     for search in searches:
         job = q.enqueue_call(
             func=parselbc, args=(search.id,1), result_ttl=0
