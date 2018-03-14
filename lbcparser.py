@@ -9,6 +9,7 @@ import os
 import json
 import dateparser
 import html
+import json
 
 from flask.ext.login import login_user
 from app import app, db, q, conn
@@ -55,7 +56,8 @@ def list_items(url, proxy=None):
             r = requests.get(listing_url)
 
         try :
-            listing_json = r.json()
+            text = r.content.decode(r.encoding)
+            listing_json = json.loads(text, strict=False)
         except Exception as e:
             print("[list_items] " + str(listing_url))
             print("[list items] " + str(listid) + " skipped cause : " + str(e))
@@ -122,7 +124,7 @@ def parselbc(id, page):
         new_items = []
         for listing in listings:
             if listing.linkid in existing_ids:
-                break
+                continue
             elif search.minprice is not None and \
                  listing.price is not None and listing.price < search.minprice:
                 continue
