@@ -34,7 +34,10 @@ def get_listing_url(linkid):
     url = app.config['BASE_URL'] + "view.json?" + "ad_id=" + str(linkid)
     return url + "&app_id=" + app.config['APP_ID'] + "&key=" + app.config['API_KEY']
 
-def list_items(url, proxy=None):
+def list_items(search, proxy=None):
+    url = search.get_url()
+    print("[list_items]" + str(url))
+
     if proxy is not None and proxy != "":
         print("[list_items] using proxy " + proxy)
         r = requests.get(url, proxies = {"https":proxy})
@@ -45,8 +48,13 @@ def list_items(url, proxy=None):
 
     listings = []
 
+    existing_ids = [e.linkid for e in search.lbc_entries]
+
     for ad in ads:
         listid = int(ad['list_id'])
+
+        if listid in existing_ids:
+            continue
 
         listing_url = get_listing_url(listid)
         
@@ -112,20 +120,11 @@ def parselbc(id, page):
     with app.test_request_context():
         search = Search.query.get(id)
 
-        url = search.get_url()
-        print("[parselbc]" + str(url))
-        try:
-            listings = list_items(url, app.config['PROXY_URL'])
-        except:
-            print(sys.exc_info())
-            return id
+        listings = list_items(search, app.config['PROXY_URL'])
 
-        existing_ids = [e.linkid for e in search.lbc_entries]
         new_items = []
         for listing in listings:
-            if listing.linkid in existing_ids:
-                continue
-            elif search.minprice is not None and \
+            if search.minprice is not None and \
                  listing.price is not None and listing.price < search.minprice:
                 continue
             elif search.maxprice is not None and \
