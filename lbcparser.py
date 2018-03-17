@@ -60,10 +60,10 @@ def list_items(search, proxy=None):
             price = int(price.replace(" ",""))
 
         if search.minprice is not None and \
-                price is not None and listing.price < search.minprice:
+                price is not None and price < search.minprice:
             continue
         if search.maxprice is not None and \
-                price is not None and listing.price > search.maxprice:
+                price is not None and price > search.maxprice:
             continue
 
         # TODO check updated price and update row in DB
