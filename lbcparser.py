@@ -133,8 +133,9 @@ def parselbc(id, page):
         new_items = list_items(search, app.config['PROXY_URL'])
 
         if len(new_items)>0:
-            db.session.add(listing)
-            search.lbc_entries.append(listing)
+            for listing in new_items:
+                db.session.add(listing)
+                search.lbc_entries.append(listing)
             db.session.commit()
 
             mail=Mail(app)
