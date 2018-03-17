@@ -52,9 +52,26 @@ def list_items(search, proxy=None):
 
     for ad in ads:
         listid = int(ad['list_id'])
+        price = ad['price']
+        
+        if (price == ''):
+            price = None
+        else:
+            price = int(price.replace(" ",""))
 
+        if search.minprice is not None and \
+                price is not None and listing.price < search.minprice:
+            continue
+        if search.maxprice is not None and \
+                price is not None and listing.price > search.maxprice:
+            continue
+
+        # TODO check updated price and update row in DB
         if listid in existing_ids:
             continue
+            # existing_entry = LBCentry.query.get(listid)
+            # if price >= existing_entry.price:
+            #     continue
 
         listing_url = get_listing_url(listid)
         
@@ -62,7 +79,6 @@ def list_items(search, proxy=None):
             r = requests.get(listing_url, proxies = {"https":proxy})
         else:
             r = requests.get(listing_url)
-
         try :
             text = r.content.decode(r.encoding)
             listing_json = json.loads(text, strict=False)
@@ -70,18 +86,12 @@ def list_items(search, proxy=None):
             print("[list_items] " + str(listing_url))
             print("[list items] " + str(listid) + " skipped cause : " + str(e))
             continue
-
         if 'body' in listing_json:
             description = listing_json['body']
         else:
             description = ""
 
         title = ad['subject']
-        price = ad['price']
-        if (price == ''):
-            price = None
-        else:
-            price = int(price.replace(" ",""))
         category = int(ad['category_id'])
 
         location = ad['region_name'] + ' - ' + \
@@ -120,23 +130,13 @@ def parselbc(id, page):
     with app.test_request_context():
         search = Search.query.get(id)
 
-        listings = list_items(search, app.config['PROXY_URL'])
-
-        new_items = []
-        for listing in listings:
-            if search.minprice is not None and \
-                 listing.price is not None and listing.price < search.minprice:
-                continue
-            elif search.maxprice is not None and \
-                 listing.price is not None and listing.price > search.maxprice:
-                continue
-            else:
-                db.session.add(listing)
-                search.lbc_entries.append(listing)
-                new_items.append(listing)
-        db.session.commit()
+        new_items = list_items(search, app.config['PROXY_URL'])
 
         if len(new_items)>0:
+            db.session.add(listing)
+            search.lbc_entries.append(listing)
+            db.session.commit()
+
             mail=Mail(app)
             msg = Message('[LBCbot - '+app.config["VERSION"]+'] New items for "'+search.title+'"', sender='lbcbot@gmail.com', recipients=[user.email for user in search.users])
             msg.html = render_template('email_entries.html', lbcentries=new_items)
