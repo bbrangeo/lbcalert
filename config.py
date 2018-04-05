@@ -1,6 +1,10 @@
 import os
 
 class Config(object):
+    def __getattr__(self,name):
+        print("get " + name)
+        return os.getenv(name)
+    
     DEBUG = False
     TESTING = False
     CSRF_ENABLED = True
@@ -13,8 +17,8 @@ class Config(object):
     MAIL_USE_TLS = False
     MAIL_USE_SSL = True
     #todo : hide this (and change password)
-    MAIL_USERNAME = "lbcbot@gmail.com"
-    MAIL_PASSWORD = "cdqqmmfuynezoigr"
+    MAIL_USERNAME = os.getenv("MAIL_USERNAME")
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
     # PROXY_URL = None
     PROXY_URL = os.getenv("PROXY_URL")
     BASE_URL = "https://mobile.leboncoin.fr/templates/api/"
