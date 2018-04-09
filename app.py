@@ -1,5 +1,7 @@
 from flask import Flask, current_app
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+
 import os
 from rq import Queue
 from rq.job import Job
@@ -10,5 +12,7 @@ app = Flask(__name__)
 app.config.from_object(os.environ['APP_SETTINGS'])
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
 
 q = Queue(connection=conn)

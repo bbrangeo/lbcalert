@@ -2,7 +2,7 @@ from app import app
 from app import db
 from datetime import datetime
 
-from flask.ext.login import current_user
+from flask_login import current_user
 
 search_entry_links = db.Table('search_entry_links',
     db.Column('search_id', db.Integer, db.ForeignKey('searches.id')),

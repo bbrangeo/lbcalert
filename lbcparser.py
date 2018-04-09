@@ -1,5 +1,5 @@
 from flask import url_for, render_template, flash
-from flask.ext.mail import Mail, Message
+from flask_mail import Mail, Message
 
 import random
 import requests
@@ -11,7 +11,7 @@ import dateparser
 import html
 import json
 
-from flask.ext.login import login_user
+from flask_login import login_user
 from app import app, db, q, conn
 from rq import Connection, get_failed_queue
 from models import User, Search, LBCentry
