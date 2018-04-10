@@ -28,14 +28,8 @@ class Config(object):
 
 class ProductionConfig(Config):
     DEBUG = False
-    SERVER_NAME = "lbcalert-pro.herokuapp.com"
+    SERVER_NAME = "212.47.243.143"
     VERSION = "PROD"
-
-class StagingConfig(Config):
-    DEVELOPMENT = True
-    DEBUG = False
-    SERVER_NAME = "lbcalert-stage.herokuapp.com"
-    VERSION = "STAGE"
 
 class DevelopmentConfig(Config):
     DEVELOPMENT = True
