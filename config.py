@@ -34,7 +34,7 @@ class ProductionConfig(Config):
 class DevelopmentConfig(Config):
     DEVELOPMENT = True
     DEBUG = True
-    SERVER_NAME = "212.47.243.143:5000"
+    SERVER_NAME = "localhost:5000"
     VERSION = "DEV"
 
 class TestingConfig(Config):

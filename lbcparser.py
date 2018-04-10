@@ -1,22 +1,16 @@
-from flask import url_for, render_template, flash
-from flask_mail import Mail, Message
-
-import random
 import requests
 import re
 import sys
 import os
 import json
 import dateparser
-import html
-import json
 import logging
 
-from flask_login import login_user
-from app import app, db, q, conn
-from rq import Connection, get_failed_queue
-from models import User, Search, LBCentry
+from flask import url_for, render_template, flash
+from flask_mail import Mail, Message
 
+from app import app, db
+from models import User, Search, LBCentry
 
 # ps, pe, mrs, rs, ms, ccs, sqs, ros, cs, bros
 # f a(all) p(private) c(company)
@@ -147,23 +141,8 @@ def parselbc(id, page):
             mail.send(msg)
         return id
 
-def task():
-    refresh_searches()
 
-def refresh_searches():
-    # Clear failed jobs
-    with Connection(conn):
-        fq = get_failed_queue()
-    for job in fq.jobs:
-            print("delete job " + job.id)
-            job.delete()
-    searches = Search.query.all()
-    for search in searches:
-        job = q.enqueue_call(
-            func=parselbc, args=(search.id,1), result_ttl=0
-        )
-        print(search.title)
-
+# For testing
 if __name__=="__main__":
     search = Search(title = "test", terms = "test", user=None)
     url = search.get_url()
