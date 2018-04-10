@@ -10,6 +10,7 @@ import json
 import dateparser
 import html
 import json
+import logging
 
 from flask_login import login_user
 from app import app, db, q, conn
@@ -35,8 +36,10 @@ def get_listing_url(linkid):
     return url + "&app_id=" + app.config['APP_ID'] + "&key=" + app.config['API_KEY']
 
 def list_items(search, proxy=None):
+    logger = logging.getLogger('rq.worker')
+
     url = search.get_url()
-    print("[list_items]" + str(url))
+    logger.info("[list_items]" + str(url))
 
     if proxy is not None and proxy != "":
         print("[list_items] using proxy " + proxy)
@@ -83,8 +86,8 @@ def list_items(search, proxy=None):
             text = r.content.decode(r.encoding)
             listing_json = json.loads(text, strict=False)
         except Exception as e:
-            print("[list_items] " + str(listing_url))
-            print("[list items] " + str(listid) + " skipped cause : " + str(e))
+            logger.error("[list_items] " + str(listing_url))
+            logger.error("[list items] " + str(listid) + " skipped cause : " + str(e))
             continue
         if 'body' in listing_json:
             description = listing_json['body']
@@ -122,7 +125,7 @@ def list_items(search, proxy=None):
         #print(params)
 
         a = LBCentry(**params)
-        print("[list_items]" + str(a))
+        logger.info("[list_items]" + str(a))
         listings.append(a)
     return listings
 
@@ -145,27 +148,21 @@ def parselbc(id, page):
         return id
 
 def task():
-    ping_heroku()
     refresh_searches()
 
-def ping_heroku():
-    requests.get("http://"+app.config['SERVER_NAME'])
-
 def refresh_searches():
-    # newproxy = requests.get("https://gimmeproxy.com/api/getProxy?curl=true&protocol=socks5&maxCheckPeriod=100&minSpeed=200").content
-    # print("setting proxy " + str(newproxy))
-    # app.config['PROXY_URL'] = str(newproxy)
-    searches = Search.query.all()
     # Clear failed jobs
     with Connection(conn):
         fq = get_failed_queue()
     for job in fq.jobs:
             print("delete job " + job.id)
             job.delete()
+    searches = Search.query.all()
     for search in searches:
         job = q.enqueue_call(
             func=parselbc, args=(search.id,1), result_ttl=0
         )
+        print(search.title)
 
 if __name__=="__main__":
     search = Search(title = "test", terms = "test", user=None)

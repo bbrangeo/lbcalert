@@ -28,13 +28,13 @@ class Config(object):
 
 class ProductionConfig(Config):
     DEBUG = False
-    SERVER_NAME = "212.47.243.143"
+    SERVER_NAME = "lbcalert.aimon.fr"
     VERSION = "PROD"
 
 class DevelopmentConfig(Config):
     DEVELOPMENT = True
     DEBUG = True
-    SERVER_NAME = "localhost:5000"
+    SERVER_NAME = "212.47.243.143:5000"
     VERSION = "DEV"
 
 class TestingConfig(Config):
