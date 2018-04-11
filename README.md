@@ -2,7 +2,7 @@
 
 An alert system for a familiar classifieds service
 
-Initial code based on [Flaskby Example Tutorial](https://realpython.com/flask-by-example-part-1-project-setup)
+Initial code based on [Flask by Example Tutorial](https://realpython.com/flask-by-example-part-1-project-setup)
 
 #### Local development
 
