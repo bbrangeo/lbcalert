@@ -1,3 +1,11 @@
+## LBCalert
+
+An alert system for a familiar classifieds service
+
+Initial code based on [Flaskby Example Tutorial](https://realpython.com/flask-by-example-part-1-project-setup)
+
+#### Local development
+
 To devlop locally, use (copy-pasting line by line might still be safer)  
 $ source setup.sh
 
