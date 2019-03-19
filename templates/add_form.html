@@ -13,9 +13,9 @@ Prix max<br>
 <br>
 Vendeur<br>
 <select name="type">
-       <option {% if vendor == "a"%} selected="selected"{% endif %} value=a>Pro et Particulers</option>
-       <option {% if vendor == "p"%} selected="selected"{% endif %} value=p>Particuliers</option> 
-       <option {% if vendor == "c"%} selected="selected"{% endif %} value=c>Professionels</option>
+       <option {% if vendor == "all"%} selected="selected"{% endif %} value=all>Pro et Particulers</option>
+       <option {% if vendor == "private"%} selected="selected"{% endif %} value=private>Particuliers</option> 
+       <option {% if vendor == "pro"%} selected="selected"{% endif %} value=pro>Professionels</option>
 </select><br>
 Code post. (ex "63000,63830")<br>
 <input type=text size=50 name=zipcode {% if zipcode %}value="{{zipcode}}"{%endif%}>
@@ -24,8 +24,11 @@ Catégorie
 <br>
 <select name="category">
     <option label=" "></option>
-    {% for cat_id, cat_name in categories.items()%}
-    <option value={{cat_id}} {% if cat_id == category%} selected="selected"{% endif %}>{{cat_name}}</option>
+    {% for cat in categories%}
+    <option value={{cat["id"]}} {% if (cat["id"] | int) == category%} selected="selected"{% endif %}>{{cat["name"]}}</option>
+   	{% for subcategory in cat["subcategories"] %}
+		<option value={{subcategory["id"]}} {% if (subcategory["id"] | int) == category%} selected="selected"{% endif %}>- {{subcategory["name"]}}</option>
+	{% endfor%}	
     {% endfor %}
 </select>
 <br>

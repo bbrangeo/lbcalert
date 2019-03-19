@@ -2,11 +2,14 @@
 <p>
 {% for lbcentry in lbcentries %}
     {% if lbcentry.time %}{{ lbcentry.time }} - {% endif %}
-<a href="{{ config['LBCURL'] }}/announce/{{ lbcentry.linkid }}.htm">
+<a href="{{ config['LBCURL'] }}/vetements/{{ lbcentry.linkid }}.htm">
     {{ lbcentry.title }}
     {% if lbcentry.price %} - {{ lbcentry.price }}{% endif %}
     {% if lbcentry.imgurl %} <br><img src={{ lbcentry.imgurl }}>{% endif %}
 </a>
+{% if lbcentry.location %}
+<br>{{ lbcentry.location }}
+{% endif %}
 {% if lbcentry.description %}
 <br> {{ lbcentry.description|safe }}    
 <br><br>

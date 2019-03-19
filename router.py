@@ -8,6 +8,7 @@ from models import User
 from Categories import categories
 
 import re
+import json
 
 @app.route('/')
 @login_required
@@ -71,7 +72,9 @@ def add_search():
         flash('Search was successfully posted')
         return redirect(url_for('show_searches'))
     else:
-        return render_template("add_search.html", categories=categories)
+        with open("search_form.json", 'r') as file:
+            search_form = json.loads(file.read())
+        return render_template("add_search.html", categories=search_form["categories"])
 
 @app.route('/edit', methods=['GET'])
 def edit_search():
@@ -85,9 +88,11 @@ def edit_search():
     category = search.category
     zipcode = search.zipcode
     extras = search.extras
-
+    
+    with open("search_form.json", 'r') as file:
+            search_form = json.loads(file.read())
     return render_template("edit_search.html",
-                        categories=categories,
+                        categories=search_form["categories"],
                         title=title,
                         terms=terms,
                         category=category,
