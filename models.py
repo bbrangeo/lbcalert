@@ -5,13 +5,13 @@ from datetime import datetime
 from flask_login import current_user
 
 search_entry_links = db.Table('search_entry_links',
-    db.Column('search_id', db.Integer, db.ForeignKey('searches.id')),
-    db.Column('lbc_entry_id', db.Integer, db.ForeignKey('lbc_entries.id'))
+    db.Column('search_id', db.Integer, db.ForeignKey('searches.id', ondelete='CASCADE')),
+    db.Column('lbc_entry_id', db.Integer, db.ForeignKey('lbc_entries.id', ondelete='CASCADE'))
 )
 
 search_user_links = db.Table('search_user_links',
-    db.Column('search_id', db.Integer, db.ForeignKey('searches.id')),
-    db.Column('user_id', db.Integer, db.ForeignKey('users.user_id'))
+    db.Column('search_id', db.Integer, db.ForeignKey('searches.id', ondelete='CASCADE')),
+    db.Column('user_id', db.Integer, db.ForeignKey('users.user_id', ondelete='CASCADE'))
 )
 
 class Search(db.Model):
@@ -23,7 +23,7 @@ class Search(db.Model):
     category = db.Column(db.Integer)
     minprice = db.Column(db.Integer)
     maxprice = db.Column(db.Integer)
-    lbc_entries = db.relationship('LBCentry', secondary=search_entry_links, backref=db.backref('searches'))
+    lbc_entries = db.relationship('LBCentry', secondary=search_entry_links, passive_deletes=True, backref='searches')
     vendor = db.Column(db.String())
     zipcode = db.Column(db.String())
     extras = db.Column(db.String())
@@ -99,7 +99,7 @@ class User(db.Model):
     password = db.Column('password' , db.String(10))
     email = db.Column('email',db.String(50),unique=True , index=True)
     registered_on = db.Column('registered_on' , db.DateTime)
-    searches = db.relationship("Search", secondary=search_user_links, backref=db.backref('users'))
+    searches = db.relationship("Search", secondary=search_user_links, passive_deletes=True, backref='users')
 
     def __init__(self, username, password, email):
         self.username = username

@@ -106,16 +106,9 @@ def edit_search():
 @app.route('/remove')
 def remove_search():
     search = Search.query.get(request.args['id'])
-    search.users.remove(current_user)
-    if len(search.users) == 0:
-        for entry in LBCentry.query.filter(LBCentry.searches.any(id=request.args['id'])).all():
-            entry.searches.remove(search)
-            if len(entry.searches) == 0:
-                db.session.delete(entry)
-        db.session.delete(search)
-        flash('Search deleted')
-    else:
-        flash('Search unlinked from user')
+    current_user.searches.remove(search) 
+    Search.query.filter(Search.users == None).delete(synchronize_session='fetch')
+    LBCentry.query.filter(LBCentry.searches == None).delete(synchronize_session='fetch')
     db.session.commit()
     flash('Search was successfully deleted')
     return redirect(url_for('show_searches'))
@@ -178,6 +171,8 @@ def register():
 @login_required
 def deregister():
     db.session.delete(current_user)
+    Search.query.filter(Search.users == None).delete(synchronize_session='fetch')
+    LBCentry.query.filter(LBCentry.searches == None).delete(synchronize_session='fetch')
     db.session.commit()
     flash('User successfully deregistered')
     return redirect(url_for('login'))
