@@ -1,11 +1,13 @@
 import requests
 import re
-import sys
-import os
 import json
 import dateparser
 import logging
 import copy
+
+logger = logging.getLogger().getChild('lbcparser')
+logger.setLevel('INFO')
+logger.addHandler(logging.StreamHandler())
 
 from flask import url_for, render_template, flash
 from flask_mail import Mail, Message
@@ -99,17 +101,17 @@ def fetch_listings(payload):
     #     r = requests.get(url)
 
 def list_items(search, proxy=None):
-    logger = logging.getLogger('rq.worker')
-
     payload = get_search_payload(search)
     logger.info("[list_items]" + str(payload))
 
-    ads = fetch_listings(payload)["ads"]
+    fetch_json = fetch_listings(payload)
+    if fetch_json["total"] == 0:
+        return []
 
-    listings = []
-
+    ads = fetch_json["ads"]
     existing_ids = [e.linkid for e in search.lbc_entries]
 
+    listings = []
     for ad in ads:
         listid = int(ad['list_id'])
         try:
@@ -192,12 +194,13 @@ def list_items(search, proxy=None):
 def parselbc(id, page):
     with app.test_request_context():
         search = Search.query.get(id)
-
+        
         new_items = list_items(search, app.config['PROXY_URL'])
+        logger.info("[parselbc] found %d new listings" % len(new_items))
 
         if len(new_items)>0:
             for listing in new_items:
-                db.session.add(listing)
+                #db.session.add(listing)
                 search.lbc_entries.append(listing)
             db.session.commit()
 
@@ -210,6 +213,10 @@ def parselbc(id, page):
 
 # For testing
 if __name__=="__main__":
-    search = Search(title = "test", terms = "test", user=None)
-    url = search.get_url()
-    list_items(url)
+    import sys
+    if len(sys.argv)>1:
+        search = Search.query.first()
+    else:
+        search = Search.query.get(sys.argv[1])
+    # import os    
+    list_items(search)

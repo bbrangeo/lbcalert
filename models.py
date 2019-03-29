@@ -36,7 +36,7 @@ class Search(db.Model):
             minprice = None, 
             maxprice = None, 
             user = current_user,
-            vendor = "p",
+            vendor = "private",
             extras = None,
             zipcode = None):
         self.title = title
