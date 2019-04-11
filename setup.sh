@@ -15,29 +15,20 @@ sudo service postgresql start
 
 # install virtualenv and wrapper to manage python virtualenvs
 sudo pip3 install --upgrade virtualenv
-sudo pip3 install --upgrade virtualenvwrapper
-
-# add environment variables to bashrc (part of virtualenvwrapper install) 
-echo 'export WORKON_HOME=$HOME/.virtualenvs' >> ~/.bashrc
-echo 'export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3' >> ~/.bashrc
-echo 'source /usr/local/bin/virtualenvwrapper.sh' >> ~/.bashrc
-
-# activate these env variables
-source ~/.bashrc
 
 # create the virtualenv for our app with its own env variables
-mkvirtualenv -p python3 ~/.virtualenvs/lbcalert
-echo 'export APP_SETTINGS="config.DevelopmentConfig"' >> ~/.virtualenvs/lbcalert/bin/postactivate
-echo 'export DATABASE_URL="postgresql:///lbcalert_dev"' >>  ~/.virtualenvs/lbcalert/bin/postactivate
-echo 'export FLASK_APP=main.py' >> ~/.virtualenvs/lbcalert/bin/postactivate
-echo 'export MAIL_USERNAME=lbcbot@gmail.com' >> ~/.virtualenvs/lbcalert/bin/postactivate
-echo 'export MAIL_PASSWORD=wwyxbctykwlctafx' >> ~/.virtualenvs/lbcalert/bin/postactivate
+python -m venv .venv
+echo 'export APP_SETTINGS="config.DevelopmentConfig"' >> .venv/bin/activate
+echo 'export DATABASE_URL="postgresql:///lbcalert_dev"' >> .venv/bin/activate
+echo 'export FLASK_APP=main.py' >> .venv/bin/activate
+echo 'export MAIL_USERNAME=lbcbot@gmail.com' >> .venv/bin/activate
+echo 'export MAIL_PASSWORD=wwyxbctykwlctafx' >> .venv/bin/activate
 
 # activate the virtualenv
-workon lbcalert
+source .venv/bin/activate
 
 # setup app-specific python modules
-pip install -r requirements.txt
+pip install -r requirements
 
 # psql role and db creation
 sudo su - postgres <<WRAP
