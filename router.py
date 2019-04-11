@@ -148,9 +148,11 @@ def get_job():
 @app.route('/showentries')
 @login_required
 def show_lbcentries():
-    search = Search.query.get(request.args['id'])
-    lbcentries = search.lbc_entries
-    html = render_template('show_lbcentries.html', lbcentries=lbcentries)
+    PERPAGE = 10
+    page = int(request.args['p'])
+    searchid = request.args['id']
+    lbcentries = LBCentry.query.filter(LBCentry.searches.any(id=searchid)).order_by(LBCentry.linkid.desc()).slice((page-1)*PERPAGE, page*PERPAGE).all()
+    html = render_template('show_lbcentries.html', lbcentries=lbcentries, searchid = searchid, page=page, perpage=PERPAGE)
     newentries = (e for e in lbcentries if e.new)
     for e in newentries:
         e.new = False

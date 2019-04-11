@@ -2,9 +2,14 @@
 
 {% extends "layout.html" %}
 {% block body %}
+  {% if page > 1 %} <a href="{{ url_for('show_lbcentries') }}?id={{ searchid }}&p={{page-1}}">previous page</a> {% else %} previous page {% endif %} | 
+  {% if lbcentries|length == perpage %} <a href="{{ url_for('show_lbcentries') }}?id={{ searchid }}&p={{page+1}}">next page</a> {% else %} next page  {% endif %}
+  <br>
+  <br>
   <p class=entries>
   {% for lbcentry in lbcentries %}
     {% if lbcentry.new %} # {% endif %}<a href="{{ config['LBCURL'] }}/announce/{{ lbcentry.linkid }}.htm">{{ lbcentry.title }}{% if lbcentry.price %} - {{ lbcentry.price }}{% endif %}</a> - {% if lbcentry.time %} - {{ lbcentry.time }}{% endif %}<br>
+    {% if lbcentry.imgurl %} <img src="{{ lbcentry.imgurl}}"><br> {% endif %}
   {% else %}
     <em>No entries</em>
   {% endfor %}

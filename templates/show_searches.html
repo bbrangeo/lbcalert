@@ -7,7 +7,7 @@
   <br>
   <!-- (id:{{ search.s.id }}) -->
   {% if search.s.category is not none %}[{{ categories[search.s.category]}}] {% endif %}
-  <a href="{{ url_for('show_lbcentries') }}?id={{ search.s.id }}">{{ search.s.title }}</a>
+  <a href="{{ url_for('show_lbcentries') }}?id={{ search.s.id }}&p=1">{{ search.s.title }}</a>
    - <em>{{ search.s.terms }}</em><br>
   {{ search.nbentries }} results{% if search.nbnew>0 %} - {{ search.nbnew }} new{% endif %}
   <br>
