@@ -6,10 +6,9 @@
   {% for search in searches %}
   <br>
   <!-- (id:{{ search.s.id }}) -->
-  {% if search.s.category is not none %}[{{ categories[search.s.category]}}] {% endif %}
   <a href="{{ url_for('show_lbcentries') }}?id={{ search.s.id }}&p=1">{{ search.s.title }}</a>
    - <em>{{ search.s.terms }}</em><br>
-  {{ search.nbentries }} results{% if search.nbnew>0 %} - {{ search.nbnew }} new{% endif %}
+  {{ search.nbentries }} results
   <br>
   <a href="{{ url_for('analyse_lbc') }}?id={{ search.s.id }}">run now</a>
    - <a href="/remove?id={{ search.s.id }}">remove</a>

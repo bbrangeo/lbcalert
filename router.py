@@ -5,7 +5,6 @@ from app import app, db, q
 from models import Search, LBCentry
 from lbcparser import parselbc
 from models import User
-from Categories import categories
 
 import re
 import json
@@ -16,8 +15,8 @@ def show_searches():
     searches = current_user.searches
     if len(searches) == 0:
         return redirect(url_for("add_search"))
-    searches = [{"s":s, "nbentries":len(s.lbc_entries), "nbnew":len([e for e in s.lbc_entries if e.new])} for s in searches]
-    return render_template('show_searches.html', searches=searches, categories=categories)
+    searches = [{"s":s, "nbentries":len(s.lbc_entries)} for s in searches]
+    return render_template('show_searches.html', searches=searches)
 
 @app.route('/add', methods=['GET','POST'])
 def add_search():
