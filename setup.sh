@@ -21,8 +21,6 @@ python -m venv .venv
 echo 'export APP_SETTINGS="config.DevelopmentConfig"' >> .venv/bin/activate
 echo 'export DATABASE_URL="postgresql:///lbcalert_dev"' >> .venv/bin/activate
 echo 'export FLASK_APP=main.py' >> .venv/bin/activate
-echo 'export MAIL_USERNAME=lbcbot@gmail.com' >> .venv/bin/activate
-echo 'export MAIL_PASSWORD=wwyxbctykwlctafx' >> .venv/bin/activate
 
 # activate the virtualenv
 source .venv/bin/activate
