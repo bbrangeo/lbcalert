@@ -30,8 +30,12 @@ from models import User, Search, LBCentry
 
 HEADERS = {
     "Content-Type" : "application/json",
-    "api_key" : "ba0c2dad52b3ec"
+    "api_key" : "ba0c2dad52b3ec",
+    "User-Agent" : "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0",
+    "Accept-Language" : "en-US,en;q=0.5",
+    "Accept-Encoding" : "gzip, deflate, br"
 }
+
 PAYLOAD = {
     "limit":100,
     "filters":{
@@ -105,7 +109,11 @@ def list_items(search, proxy=None):
     logger.info("[list_items]" + str(payload))
 
     fetch_json = fetch_listings(payload)
-    if fetch_json["total"] == 0:
+    try:
+        if fetch_json["total"] == 0:
+            return []
+    except:
+        print(fetch_json)
         return []
 
     ads = fetch_json["ads"]
@@ -215,8 +223,8 @@ def parselbc(id, page):
 if __name__=="__main__":
     import sys
     if len(sys.argv)>1:
-        search = Search.query.first()
-    else:
         search = Search.query.get(sys.argv[1])
+    else:
+        search = Search.query.first()
     # import os    
     list_items(search)
