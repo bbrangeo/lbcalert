@@ -70,6 +70,7 @@ class Search(db.Model):
     def get_payload(self):
         payload = {
             "limit":35,
+            "limit_alu":3,
             "filters":{
                 "category":{},
                 "enums":{

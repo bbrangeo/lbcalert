@@ -3,7 +3,7 @@ import re
 import json
 import dateparser
 import logging
-import random
+import shadow_useragent
 
 logger = logging.getLogger().getChild('lbcparser')
 logger.setLevel('INFO')
@@ -28,7 +28,7 @@ HEADER_TEMPLATE = {
     "Origin" : "https://www.leboncoin.fr",
     "DNT" : "1",
     "Connection" : "keep-alive",
-    # "Cookie": "datadome=3qvLIk4IfzkLdZAbvq-i3oUs8p9nsqll4sAn.gDG8Hfg0d~8SO5Gxm1j-819K629Iblv3aNMoKb8dOipBygUkBtVO4.V8lal6gohz7AY2T; Max-Age=31536000; Domain=.leboncoin.fr; Path=/"
+    "Cookie": "datadome=3qvLIk4IfzkLdZAbvq-i3oUs8p9nsqll4sAn.gDG8Hfg0d~8SO5Gxm1j-819K629Iblv3aNMoKb8dOipBygUkBtVO4.V8lal6gohz7AY2T; Max-Age=31536000; Domain=.leboncoin.fr; Path=/"
 }
 COOKIES = {
     "datadome" : "FbFpYkJJWoFw_JTHOvO1Qx4GN0r~NytNwhULUnLvDwHqPtHvU3-aB~qAzzX05TCO2Y49PCh8eSIYcdFwTrWk1CTDxPReScw~8XcBkJjWSC",
@@ -36,9 +36,10 @@ COOKIES = {
     "Path" : "/"
 }
 
-def random_user_agent():
-    lines = open('user_agents').read().splitlines()
-    agent =random.choice(lines)
+def get_random_user_agent():
+    ua = shadow_useragent.ShadowUserAgent()
+    agent = ua.percent(0.05)
+    logger.info("[shadow_useragent] using : " + agent)
     return agent
 
 def fetch_listings(payload, proxy=None):
@@ -47,11 +48,11 @@ def fetch_listings(payload, proxy=None):
         proxymanager = ProxyManager.from_file("proxies")
         proxy = proxymanager.get_random_proxy().get_url()
         logger.info("[fetch_listings] Using proxy " + proxy)
-        HEADER_TEMPLATE.update({"User-Agent":random_user_agent()})
+        HEADER_TEMPLATE.update({"User-Agent":get_random_user_agent()})
         try:
             r = requests.post("https://api.leboncoin.fr/finder/search",
                 headers = HEADER_TEMPLATE,
-                cookies = COOKIES,
+                # cookies = COOKIES,
                 json = payload,
                 proxies = {"https": proxy},
                 timeout = 5)
@@ -62,46 +63,29 @@ def fetch_listings(payload, proxy=None):
             if retries == 3:
                 logger.warn("[fetch_listings] abandoning")
                 return {}
-    try:
-        logger.info("[fetch_listings] Found " + str(r.json()["total"]) + " listings")
-    except:
-        logger.error("[fetch_listings] couldn't get listings, LBC response below")
-        logger.info(r.json())
-        return {}
     return r.json()
 
-def list_items(search):
-    payload = search.get_payload()
-    logger.info("[list_items]" + str(payload))
+def get_entry_count(fetch_json):
+    if "total" not in fetch_json:
+        logger.error("[get_entry_count] couldn't get listings, LBC response below")
+        logger.info(fetch_json)
+        return 0
+    else:
+        entry_count = fetch_json["total"]
+        logger.info("[get_entry_count] Found %d listing(s)" % entry_count)
+        return entry_count
 
-    fetch_json = fetch_listings(payload)
-    try:
-        if fetch_json["total"] == 0:
-            return []
-    except:
-        logger.warn("[list_item] error with json %s", str(fetch_json))
-        return []
-
-    ads = fetch_json["ads"]
-    existing_ids = [e.linkid for e in search.lbc_entries]
-
+def get_new_items(existing_ids, ads):
     listings = []
     for ad in ads:
         listid = int(ad['list_id'])
+        if listid in existing_ids:
+            continue
+
         try:
             price = int(ad['price'][0])
         except:
-            logger.error("price issue with " + str(ad))
-        
-        # if search.minprice is not None and \
-        #         price is not None and price < search.minprice:
-        #     continue
-        # if search.maxprice is not None and \
-        #         price is not None and price > search.maxprice:
-        #     continue
-
-        # TODO check updated price and update row in DB
-        if listid in existing_ids:
+            logger.error("[get_new_items] price issue with " + str(ad))
             continue
 
         description = ad["body"]
@@ -137,47 +121,56 @@ def list_items(search):
             "description": description
         }
 
-        #print(params)
-
         a = LBCentry(**params)
         logger.info("[list_items]" + str(a))
         listings.append(a)
     return listings
 
 def parselbc(id):
-    with app.test_request_context():
-        search = Search.query.get(id)
-        
-        new_items = list_items(search)
-        logger.info("[parselbc] found %d new listings" % len(new_items))
+    search = Search.query.get(id)
 
-        if len(new_items)>0:
-            for listing in new_items:
-                #db.session.add(listing)
-                search.lbc_entries.append(listing)
-            db.session.commit()
+    payload = search.get_payload()
+    logger.info("[parselbc]" + str(payload))
 
+    fetch_json = fetch_listings(payload)
+    entry_count = get_entry_count(fetch_json)
+
+    if entry_count > 0:
+        ads = fetch_json["ads"]
+        existing_ids = [e.linkid for e in search.lbc_entries]
+        new_items = get_new_items(existing_ids, ads)
+    else:
+        new_items = []
+
+    new_item_count = len(new_items)
+
+    logger.info("[parselbc] found %d new listings" % new_item_count)
+    
+    if new_item_count>0:
+        # commit new items to db
+        for listing in new_items:
+            search.lbc_entries.append(listing)
+        db.session.commit()
+
+        # TODO figure out how to avoid requiring context
+        with app.test_request_context():
             mail=Mail(app)
             msg = Message('[LBCbot - '+app.config["VERSION"]+'] New items for "'+search.title+'"', sender='lbcbot@gmail.com', recipients=[user.email for user in search.users])
             msg.html = render_template('email_entries.html', lbcentries=new_items)
             mail.send(msg)
-        
-            if search.notify == True:
-                logger.info("[parselbc] notifying")
-                resp = requests.post(search.notify_url, json={
-                    "message": "%s - new items" % search.title,
-                    "priority": 5,
-                    "title": "Lbcalert"
-                })
-        
-        return id
+    
+        # send with notification service gotify
+        # url looks like "https://push.example.de/message?token=<apptoken>"
+        if search.notify == True:
+            logger.info("[parselbc] notifying")
+            resp = requests.post(search.notify_url, json={
+                "message": "%s - %d new items" % (search.title,new_item_count),
+                "priority": 5,
+                "title": "Lbcalert"
+            })
+    return id
+
 
 # For testing
-if __name__=="__main__":
-    import sys
-    if len(sys.argv)>1:
-        search = Search.query.get(sys.argv[1])
-    else:
-        search = Search.query.first()
-    # import os    
-    list_items(search)
+if __name__=="__main__":    
+    parselbc(94)

@@ -10,9 +10,8 @@
    - <em>{{ search.s.terms }}</em><br>
   {{ search.nbentries }} results
   <br>
-  <a href="{{ url_for('analyse_lbc') }}?id={{ search.s.id }}">run now</a>
+  <a href="{{ url_for('edit_search') }}?id={{ search.s.id }}">edit</a>
    - <a href="/remove?id={{ search.s.id }}">remove</a>
-   - <a href="{{ url_for('edit_search') }}?id={{ search.s.id }}">edit</a>
   <br>
   {% else %}
     <em>No searches here so far</em>

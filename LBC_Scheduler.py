@@ -2,7 +2,10 @@ from scheduler import Scheduler
 from models import Search
 from lbcparser import parselbc
 
-from app import q
+from rq import Queue
+from worker import conn
+
+q = Queue(connection=conn)
 
 # TODO launch as separate service ?
 def task():

@@ -1,7 +1,7 @@
 from flask import render_template, request, flash, redirect, url_for
 from flask_login import login_user, logout_user, login_required, current_user
 
-from app import app, db, q
+from app import app, db
 from models import Search, LBCentry
 from lbcparser import parselbc
 from models import User
@@ -102,6 +102,7 @@ def edit_search():
                         extras=extras,
                         search_id=search_id)
 
+# TODO add "are you sure ?"
 @app.route('/remove')
 def remove_search():
     search = Search.query.get(request.args['id'])
@@ -125,24 +126,6 @@ def join_search():
     else:
         flash('User already linked with search ' + str(searchid)) 
     return redirect(url_for('show_searches'))
-
-@app.route('/analyse')
-def analyse_lbc():
-    job = q.enqueue(
-        parselbc, request.args['id'], result_ttl=0
-    )
-    flash('Search added to parse queue:'+job.get_id())
-    return redirect(url_for('show_searches'))
-
-@app.route("/job", methods=['GET'])
-def get_job():
-    job = Job.fetch(request.args['key'], connection=conn)
-    if job.is_finished:
-        lbcentries = Search.query.get(job.result).lbc_entries
-        #TODO return of new entries
-        return "Job done", 200
-    else:
-        return "Job not finished", 202
 
 @app.route('/showentries')
 @login_required

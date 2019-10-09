@@ -9,8 +9,3 @@ app.config.from_object(os.environ['APP_SETTINGS'])
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-
-from rq import Queue
-from worker import conn
-
-q = Queue(connection=conn)
