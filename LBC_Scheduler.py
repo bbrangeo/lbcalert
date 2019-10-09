@@ -9,8 +9,8 @@ def task():
     q.failed_job_registry.cleanup()
     searches = Search.query.all()
     for search in searches:
-        job = q.enqueue_call(
-            func=parselbc, args=(search.id,1), result_ttl=0
+        job = q.enqueue(
+            parselbc, search.id, result_ttl=0
         )
         print(search.title)
 

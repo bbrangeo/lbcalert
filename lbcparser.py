@@ -3,109 +3,61 @@ import re
 import json
 import dateparser
 import logging
-import copy
 
 logger = logging.getLogger().getChild('lbcparser')
 logger.setLevel('INFO')
 logger.addHandler(logging.StreamHandler())
 
-from flask import url_for, render_template, flash
+from flask import render_template
 from flask_mail import Mail, Message
 
 from app import app, db
 from models import User, Search, LBCentry
 
-# ps, pe, mrs, rs, ms, ccs, sqs, ros, cs, bros
-# f a(all) p(private) c(company)
-# c = category number
-# zipcode = zipcode
-# q = query
-# o = page
-# w ?
-# ca ?
-# ps - pe price range(categories)
-# rs - re year range
-# ms - me km range
-# ccs - cce cylindre
+from proxy_manager import ProxyManager
 
 HEADERS = {
     "Content-Type" : "application/json",
     "api_key" : "ba0c2dad52b3ec",
     "User-Agent" : "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0",
     "Accept-Language" : "en-US,en;q=0.5",
-    "Accept-Encoding" : "gzip, deflate, br"
+    "Accept-Encoding" : "gzip, deflate, br",
+    "Accept" : "*/*",
+    "Referer" : "https://www.leboncoin.fr/annonces/offres/pays_de_la_loire/",
+    "Origin" : "https://www.leboncoin.fr",
+    "DNT" : "1",
+    "Connection" : "keep-alive"
 }
 
-PAYLOAD = {
-    "limit":100,
-    "filters":{
-        "category":{},
-        "enums":{
-            "ad_type":["offer"]
-        },
-        "location":{},
-        "keywords":{},
-        "ranges":{
-            "price":{}
-        }
-    },
-    "owner_type":"all"
-}
-
-# obtained from https://stackoverflow.com/a/7205107/34871
-def merge(a, b, path=None):
-    "merges b into a"
-    if path is None: path = []
-    for key in b:
-        if key in a:
-            if isinstance(a[key], dict) and isinstance(b[key], dict):
-                merge(a[key], b[key], path + [str(key)])
-            elif a[key] == b[key]:
-                pass # same leaf value
-            else:
-                raise Exception('Conflict at %s' % '.'.join(path + [str(key)]))
-        else:
-            a[key] = b[key]
-    return a
-
-def get_listing_url(linkid):
-    url = app.config['BASE_URL'] + "view.json?" + "ad_id=" + str(linkid)
-    return url + "&app_id=" + app.config['APP_ID'] + "&key=" + app.config['API_KEY']
-
-def get_search_payload(search):
-    payload = copy.deepcopy(PAYLOAD)
-    payload["filters"]["keywords"]["text"] = search.terms
-    if search.category is not None:
-        payload["filters"]["category"]["id"] = str(search.category)
-    if search.zipcode is not None:
-        payload["filters"]["location"]["city_zipcodes"] = [{"zipcode":zipcode} for zipcode in search.zipcode.split(",")]
-    payload["owner_type"] = search.vendor
-    if search.minprice is not None:
-        payload["filters"]["ranges"]["price"].update({"min":search.minprice})
-    if search.maxprice is not None:
-        payload["filters"]["ranges"]["price"].update({"max":search.maxprice})
-    if search.extras is not None:
+def fetch_listings(payload, proxy=None):
+    retries = 0
+    while True:
+        proxymanager = ProxyManager.from_file("proxies")
+        proxy = proxymanager.get_random_proxy().get_url()
+        logger.info("[fetch_listings] Using proxy " + proxy)
         try:
-            extra_json = json.loads(search.extras)
-            payload = merge(payload,extra_json)
-        except:
-            pass
-    return payload
-
-def fetch_listings(payload):
-    r = requests.post("https://api.leboncoin.fr/finder/search",
-        headers = HEADERS,
-        json = payload)
+            r = requests.post("https://api.leboncoin.fr/finder/search",
+                headers = HEADERS,
+                json = payload,
+                proxies = {"https": proxy},
+                timeout = 5)
+            break
+        except Exception as e:
+            retries+=1
+            logger.warn("[fetch_listings] failed %d times, %s" % (retries,e))
+            if retries == 3:
+                logger.warn("[fetch_listings] abandoning")
+                return {}
+    try:
+        logger.info("[fetch_listings] Found " + str(r.json()["total"]) + " listings")
+    except:
+        logger.error("[fetch_listings] couldn't get listings, LBC response below")
+        logger.info(r.json())
+        return {}
     return r.json()
 
-    # if proxy is not None and proxy != "":
-    #     logger.info("[list_items] using proxy " + proxy)
-    #     r = requests.get(url, proxies = {"https":proxy})
-    # else:
-    #     r = requests.get(url)
-
-def list_items(search, proxy=None):
-    payload = get_search_payload(search)
+def list_items(search):
+    payload = search.get_payload()
     logger.info("[list_items]" + str(payload))
 
     fetch_json = fetch_listings(payload)
@@ -113,7 +65,7 @@ def list_items(search, proxy=None):
         if fetch_json["total"] == 0:
             return []
     except:
-        print(fetch_json)
+        logger.warn("[list_item] error with json %s", str(fetch_json))
         return []
 
     ads = fetch_json["ads"]
@@ -137,27 +89,6 @@ def list_items(search, proxy=None):
         # TODO check updated price and update row in DB
         if listid in existing_ids:
             continue
-            # existing_entry = LBCentry.query.get(listid)
-            # if price >= existing_entry.price:
-            #     continue
-
-        # listing_url = get_listing_url(listid)
-        
-        # if proxy is not None:
-        #     r = requests.get(listing_url, proxies = {"https":proxy})
-        # else:
-        #     r = requests.get(listing_url)
-        # try :
-        #     text = r.content.decode(r.encoding)
-        #     listing_json = json.loads(text, strict=False)
-        # except Exception as e:
-        #     logger.error("[list_items] " + str(listing_url))
-        #     logger.error("[list items] " + str(listid) + " skipped cause : " + str(e))
-        #     continue
-        # if 'body' in listing_json:
-        #     description = listing_json['body']
-        # else:
-        #     description = ""
 
         description = ad["body"]
 
@@ -199,11 +130,11 @@ def list_items(search, proxy=None):
         listings.append(a)
     return listings
 
-def parselbc(id, page):
+def parselbc(id):
     with app.test_request_context():
         search = Search.query.get(id)
         
-        new_items = list_items(search, app.config['PROXY_URL'])
+        new_items = list_items(search)
         logger.info("[parselbc] found %d new listings" % len(new_items))
 
         if len(new_items)>0:
@@ -216,8 +147,15 @@ def parselbc(id, page):
             msg = Message('[LBCbot - '+app.config["VERSION"]+'] New items for "'+search.title+'"', sender='lbcbot@gmail.com', recipients=[user.email for user in search.users])
             msg.html = render_template('email_entries.html', lbcentries=new_items)
             mail.send(msg)
+        
+            if search.notify == True:
+                resp = requests.post(search.notify_url, json={
+                    "message": "New items for "+search.title,
+                    "priority": 5,
+                    "title": "Lbcalert"
+                })
+        
         return id
-
 
 # For testing
 if __name__=="__main__":

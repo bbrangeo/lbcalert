@@ -3,6 +3,14 @@ from app import db
 from datetime import datetime
 
 from flask_login import current_user
+from helper_functions import merge_dicts
+import json
+
+import logging
+
+logger = logging.getLogger().getChild('models')
+logger.setLevel('INFO')
+logger.addHandler(logging.StreamHandler())
 
 search_entry_links = db.Table('search_entry_links',
     db.Column('search_id', db.Integer, db.ForeignKey('searches.id', ondelete='CASCADE')),
@@ -27,6 +35,8 @@ class Search(db.Model):
     vendor = db.Column(db.String())
     zipcode = db.Column(db.String())
     extras = db.Column(db.String())
+    notify = db.Column(db.Boolean())
+    notify_url = db.Column(db.String())
     
     def __init__(
             self, 
@@ -57,16 +67,41 @@ class Search(db.Model):
     def __repr__(self):
         return '<id {}>'.format(self.id)
 
-    def get_url(self):
-        url = app.config['BASE_URL'] + "list.json?" + "&q=" + self.terms
+    def get_payload(self):
+        payload = {
+            "limit":100,
+            "filters":{
+                "category":{},
+                "enums":{
+                    "ad_type":["offer"]
+                },
+                "location":{},
+                "keywords":{},
+                "ranges":{
+                    "price":{}
+                }
+            },
+            "owner_type":"all"
+        }
+
+        payload["filters"]["keywords"]["text"] = self.terms
         if self.category is not None:
-            url = url + "&c=" + str(self.category)
+            payload["filters"]["category"]["id"] = str(self.category)
         if self.zipcode is not None:
-            url = url + "&zipcode=" + self.zipcode
-        url = url + "&f=" + self.vendor
+            payload["filters"]["location"]["locations"] = [{"locationType": "city", "zipcode":zipcode} for zipcode in self.zipcode.split(",")]
+        payload["owner_type"] = self.vendor
+        if self.minprice is not None:
+            payload["filters"]["ranges"]["price"].update({"min":self.minprice})
+        if self.maxprice is not None:
+            payload["filters"]["ranges"]["price"].update({"max":self.maxprice})
         if self.extras is not None:
-            url = url + self.extras
-        return url + "&app_id=" + app.config['APP_ID'] + "&key=" + app.config['API_KEY']
+            try:
+                extra_json = json.loads(self.extras)
+            except:
+                extra_json = {}
+                logger.warn("[get_payload] couldn't parse extras")
+            payload = merge_dicts(payload,extra_json)
+        return payload
 
 class LBCentry(db.Model):
     __tablename__ = 'lbc_entries'
