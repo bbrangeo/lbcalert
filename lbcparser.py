@@ -3,6 +3,7 @@ import re
 import json
 import dateparser
 import logging
+import random
 
 logger = logging.getLogger().getChild('lbcparser')
 logger.setLevel('INFO')
@@ -16,18 +17,29 @@ from models import User, Search, LBCentry
 
 from proxy_manager import ProxyManager
 
-HEADERS = {
+HEADER_TEMPLATE = {
     "Content-Type" : "application/json",
     "api_key" : "ba0c2dad52b3ec",
     "User-Agent" : "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0",
-    "Accept-Language" : "en-US,en;q=0.5",
+    "Accept-Language" : "fr-FR,fr;q=0.5",
     "Accept-Encoding" : "gzip, deflate, br",
     "Accept" : "*/*",
     "Referer" : "https://www.leboncoin.fr/annonces/offres/pays_de_la_loire/",
     "Origin" : "https://www.leboncoin.fr",
     "DNT" : "1",
-    "Connection" : "keep-alive"
+    "Connection" : "keep-alive",
+    # "Cookie": "datadome=3qvLIk4IfzkLdZAbvq-i3oUs8p9nsqll4sAn.gDG8Hfg0d~8SO5Gxm1j-819K629Iblv3aNMoKb8dOipBygUkBtVO4.V8lal6gohz7AY2T; Max-Age=31536000; Domain=.leboncoin.fr; Path=/"
 }
+COOKIES = {
+    "datadome" : "FbFpYkJJWoFw_JTHOvO1Qx4GN0r~NytNwhULUnLvDwHqPtHvU3-aB~qAzzX05TCO2Y49PCh8eSIYcdFwTrWk1CTDxPReScw~8XcBkJjWSC",
+    "Domain" : ".leboncoin.fr",
+    "Path" : "/"
+}
+
+def random_user_agent():
+    lines = open('user_agents').read().splitlines()
+    agent =random.choice(lines)
+    return agent
 
 def fetch_listings(payload, proxy=None):
     retries = 0
@@ -35,9 +47,11 @@ def fetch_listings(payload, proxy=None):
         proxymanager = ProxyManager.from_file("proxies")
         proxy = proxymanager.get_random_proxy().get_url()
         logger.info("[fetch_listings] Using proxy " + proxy)
+        HEADER_TEMPLATE.update({"User-Agent":random_user_agent()})
         try:
             r = requests.post("https://api.leboncoin.fr/finder/search",
-                headers = HEADERS,
+                headers = HEADER_TEMPLATE,
+                cookies = COOKIES,
                 json = payload,
                 proxies = {"https": proxy},
                 timeout = 5)
@@ -149,8 +163,9 @@ def parselbc(id):
             mail.send(msg)
         
             if search.notify == True:
+                logger.info("[parselbc] notifying")
                 resp = requests.post(search.notify_url, json={
-                    "message": "New items for "+search.title,
+                    "message": "%s - new items" % search.title,
                     "priority": 5,
                     "title": "Lbcalert"
                 })

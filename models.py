@@ -69,7 +69,7 @@ class Search(db.Model):
 
     def get_payload(self):
         payload = {
-            "limit":100,
+            "limit":35,
             "filters":{
                 "category":{},
                 "enums":{
