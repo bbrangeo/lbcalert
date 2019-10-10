@@ -1,7 +1,8 @@
+# impose import order
 from app import app, db
 import models
 import login
-import LBC_Scheduler
+import lbc_scheduler
 import router
 
 if __name__=="__main__":

@@ -1,13 +1,9 @@
 #!/bin/bash
 
 ## to be run with "source"
-
-# redis is the "mini-db" used to store the parse queue
-sudo add-apt-repository ppa:chris-lea/redis-server
-
 # system-wide required packages
 sudo apt-get update
-sudo apt-get install build-essential postgresql postgresql-contrib redis-server
+sudo apt-get install build-essential postgresql postgresql-contrib
 sudo apt-get install libpq-dev python3-dev python3-pip
 
 # launch the db server

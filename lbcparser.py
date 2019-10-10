@@ -36,28 +36,32 @@ COOKIES = {
     "Path" : "/"
 }
 
+ua = shadow_useragent.ShadowUserAgent()
 def get_random_user_agent():
-    ua = shadow_useragent.ShadowUserAgent()
     agent = ua.percent(0.05)
     logger.info("[shadow_useragent] using : " + agent)
     return agent
 
-def fetch_listings(payload, proxy=None):
+proxymanager = ProxyManager.from_file("proxies")
+def fetch_listings(payload):
     retries = 0
     while True:
-        proxymanager = ProxyManager.from_file("proxies")
-        proxy = proxymanager.get_random_proxy().get_url()
-        logger.info("[fetch_listings] Using proxy " + proxy)
+        proxy = proxymanager.get_random_proxy()
+        logger.info("[fetch_listings] Using proxy " + str(proxy))
         HEADER_TEMPLATE.update({"User-Agent":get_random_user_agent()})
         try:
             r = requests.post("https://api.leboncoin.fr/finder/search",
                 headers = HEADER_TEMPLATE,
                 # cookies = COOKIES,
                 json = payload,
-                proxies = {"https": proxy},
+                proxies = {"https": proxy.get_url()},
                 timeout = 5)
             break
         except Exception as e:
+            logger.warn("[fetch_listings] checking proxy")
+            if not proxy.test_proxy():
+                proxymanager.remove_bad_proxy(proxy)
+                logger.warn("[fetch_listings] deleted bad proxy, %d remaining" % len(proxymanager.proxies))
             retries+=1
             logger.warn("[fetch_listings] failed %d times, %s" % (retries,e))
             if retries == 3:
@@ -127,50 +131,57 @@ def get_new_items(existing_ids, ads):
     return listings
 
 def parselbc(id):
-    search = Search.query.get(id)
+    # database interactions within an app context
+    with app.app_context():
+        search = Search.query.get(id)
 
-    payload = search.get_payload()
-    logger.info("[parselbc]" + str(payload))
+        payload = search.get_payload()
+        logger.info("[parselbc]" + str(payload))
 
-    fetch_json = fetch_listings(payload)
-    entry_count = get_entry_count(fetch_json)
+        fetch_json = fetch_listings(payload)
+        entry_count = get_entry_count(fetch_json)
 
-    if entry_count > 0:
-        ads = fetch_json["ads"]
-        existing_ids = [e.linkid for e in search.lbc_entries]
-        new_items = get_new_items(existing_ids, ads)
-    else:
-        new_items = []
+        if entry_count > 0:
+            ads = fetch_json["ads"]
+            existing_ids = [e.linkid for e in search.lbc_entries]
+            new_items = get_new_items(existing_ids, ads)
+        else:
+            new_items = []
 
-    new_item_count = len(new_items)
+        new_item_count = len(new_items)
 
-    logger.info("[parselbc] found %d new listings" % new_item_count)
-    
-    if new_item_count>0:
-        # commit new items to db
-        for listing in new_items:
-            search.lbc_entries.append(listing)
-        db.session.commit()
+        logger.info("[parselbc] found %d new listings" % new_item_count)
+        
+        if new_item_count>0:
+            # commit new items to db
+            for listing in new_items:
+                search.lbc_entries.append(listing)
+            db.session.commit()
 
-        # TODO figure out how to avoid requiring context
-        with app.test_request_context():
+            logger.info("[parselbc] sending email")
             mail=Mail(app)
             msg = Message('[LBCbot - '+app.config["VERSION"]+'] New items for "'+search.title+'"', sender='lbcbot@gmail.com', recipients=[user.email for user in search.users])
             msg.html = render_template('email_entries.html', lbcentries=new_items)
             mail.send(msg)
-    
-        # send with notification service gotify
-        # url looks like "https://push.example.de/message?token=<apptoken>"
-        if search.notify == True:
-            logger.info("[parselbc] notifying")
-            resp = requests.post(search.notify_url, json={
-                "message": "%s - %d new items" % (search.title,new_item_count),
-                "priority": 5,
-                "title": "Lbcalert"
-            })
-    return id
 
+            # send with notification service gotify
+            # url looks like "https://push.example.de/message?token=<apptoken>"
+            if search.notify == True:
+                notify_url = search.notify_url
+                logger.info("[parselbc] notifying using %s" % notify_url)
+                resp = requests.post(notify_url, json={
+                    "message": "%s new items" % search.title,
+                    "priority": 5,
+                    "title": "Lbcalert"
+                })
+                logger.info("[parselbc] notified")
+        logger.info("[parselbc] exiting")
+        return id
 
 # For testing
 if __name__=="__main__":    
-    parselbc(94)
+    search_id = 94
+    search = Search.query.get(search_id)
+    db.session.delete(search.lbc_entries[0])
+    db.session.commit()
+    parselbc(search_id)

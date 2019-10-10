@@ -1,4 +1,4 @@
-from threading import Timer, Thread
+from threading import Timer
 from time import sleep
 
 class Scheduler(object):
