@@ -43,45 +43,40 @@ def get_random_user_agent():
     return agent
 
 MAX_RETRIES = 5
-good_proxies = ProxyManager.from_file("proxies")
-banned_proxies = ProxyManager([])
-bad_proxies = ProxyManager([])
+# proxy_manager = ProxyManager.from_csv("proxies",
+#                                       'proxy_manager/good_proxies', 
+#                                       'proxy_manager/bad_proxies',
+#                                       'proxy_manager/banned_proxies')
+# proxy_manager.export_proxy_manager()
+proxy_manager = ProxyManager.import_proxy_manager('proxy_manager/good_proxies', 
+                                   'proxy_manager/bad_proxies',
+                                   'proxy_manager/banned_proxies')
 def fetch_listings(payload):
     retries = 0
     while True:
-        proxy = good_proxies.get_random_proxy()
+        proxy = proxy_manager.get_random_good_proxy()
         logger.info("[fetch_listings] Using proxy " + str(proxy))
         HEADER_TEMPLATE.update({"User-Agent":get_random_user_agent()})
         try:
             r = requests.post("https://api.leboncoin.fr/finder/search",
-                headers = HEADER_TEMPLATE,
-                # cookies = COOKIES,
-                json = payload,
-                proxies = {"https": proxy.get_url()},
-                timeout = 5)
+                              headers=HEADER_TEMPLATE,
+                              # cookies = COOKIES,
+                              json=payload,
+                              proxies={"https": proxy.get_url()},
+                              timeout=5)
             break
         except Exception as e:
-            logger.warn("[fetch_listings] checking proxy")
             if not proxy.test():
-                proxy.fail()
-                logger.info("[fetch_listings] proxy failed")
-                if proxy.consecutive_fails >= 3:
-                    good_proxies.remove_proxy(proxy)
-                    bad_proxies.add_proxy(proxy)
-                    logger.info("[fetch_listings] proxy failed more than 3 consecutive times")
-                    logger.warn("[fetch_listings] deleted bad proxy, %d remaining" % len(good_proxies.proxies))
-            retries+=1
-            logger.warn("[fetch_listings] failed %d times, %s" % (retries,e))
+                proxy_manager.fail_proxy(proxy)
+                retries += 1
+                logger.warn("[fetch_listings] failed %d times, %s" % (retries, e))
             if retries == MAX_RETRIES:
                 logger.warn("[fetch_listings] abandoning")
                 return {}
     proxy.succeed()
     fetch_json = r.json()
     if "url" in fetch_json.keys() and "datado" in fetch_json["url"]:
-        logger.info("[fetch_listings] banning proxy %s" % str(proxy))
-        proxy.ban()
-        good_proxies.remove_proxy(proxy)
-        banned_proxies.add_proxy(proxy)
+        proxy_manager.ban_proxy(proxy)
     return fetch_json
 
 def get_entry_count(fetch_json):

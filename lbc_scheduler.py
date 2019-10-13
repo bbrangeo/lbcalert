@@ -20,3 +20,6 @@ def task():
 
 scheduler = Scheduler(300, task)
 scheduler.start()
+
+if __name__ == "__main__":
+    task()
