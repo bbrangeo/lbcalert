@@ -18,5 +18,5 @@ def task():
         parselbc(id)
     logger.info("[scheduler] end task")
 
-scheduler = Scheduler(60, task)
+scheduler = Scheduler(300, task)
 scheduler.start()

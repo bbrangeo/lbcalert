@@ -42,11 +42,14 @@ def get_random_user_agent():
     logger.info("[shadow_useragent] using : " + agent)
     return agent
 
-proxymanager = ProxyManager.from_file("proxies")
+MAX_RETRIES = 5
+good_proxies = ProxyManager.from_file("proxies")
+banned_proxies = ProxyManager([])
+bad_proxies = ProxyManager([])
 def fetch_listings(payload):
     retries = 0
     while True:
-        proxy = proxymanager.get_random_proxy()
+        proxy = good_proxies.get_random_proxy()
         logger.info("[fetch_listings] Using proxy " + str(proxy))
         HEADER_TEMPLATE.update({"User-Agent":get_random_user_agent()})
         try:
@@ -59,15 +62,27 @@ def fetch_listings(payload):
             break
         except Exception as e:
             logger.warn("[fetch_listings] checking proxy")
-            if not proxy.test_proxy():
-                proxymanager.remove_bad_proxy(proxy)
-                logger.warn("[fetch_listings] deleted bad proxy, %d remaining" % len(proxymanager.proxies))
+            if not proxy.test():
+                proxy.fail()
+                logger.info("[fetch_listings] proxy failed")
+                if proxy.consecutive_fails >= 3:
+                    good_proxies.remove_proxy(proxy)
+                    bad_proxies.add_proxy(proxy)
+                    logger.info("[fetch_listings] proxy failed more than 3 consecutive times")
+                    logger.warn("[fetch_listings] deleted bad proxy, %d remaining" % len(good_proxies.proxies))
             retries+=1
             logger.warn("[fetch_listings] failed %d times, %s" % (retries,e))
-            if retries == 3:
+            if retries == MAX_RETRIES:
                 logger.warn("[fetch_listings] abandoning")
                 return {}
-    return r.json()
+    proxy.succeed()
+    fetch_json = r.json()
+    if "url" in fetch_json.keys() and "datado" in fetch_json["url"]:
+        logger.info("[fetch_listings] banning proxy %s" % str(proxy))
+        proxy.ban()
+        good_proxies.remove_proxy(proxy)
+        banned_proxies.add_proxy(proxy)
+    return fetch_json
 
 def get_entry_count(fetch_json):
     if "total" not in fetch_json:
@@ -173,7 +188,7 @@ def parselbc(id):
                     "message": "%s new items" % search.title,
                     "priority": 5,
                     "title": "Lbcalert"
-                })
+                }, timeout = 5)
                 logger.info("[parselbc] notified")
         logger.info("[parselbc] exiting")
         return id
