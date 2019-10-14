@@ -1,3 +1,8 @@
+import logging
+lbcalert_logger = logging.getLogger('lbcalert')
+lbcalert_logger.setLevel(logging.INFO)
+lbcalert_logger.addHandler(logging.StreamHandler())
+
 # impose import order
 from app import app, db
 import models
