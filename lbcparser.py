@@ -1,4 +1,7 @@
 import logging
+if __name__ == "__main__":
+    logging.getLogger('lbcalert').setLevel(logging.INFO)
+    logging.getLogger('lbcalert').addHandler(logging.StreamHandler())
 LOGGER = logging.getLogger('lbcalert').getChild('lbcparser')
 
 import requests
@@ -41,19 +44,20 @@ def get_random_user_agent():
     return agent
 
 MAX_RETRIES = 5
-# proxy_manager = ProxyManager.from_csv("proxies",
+# proxy_manager = ProxyManager.from_csv("proxy_manager/proxy_import",
 #                                       'proxy_manager/good_proxies', 
 #                                       'proxy_manager/bad_proxies',
 #                                       'proxy_manager/banned_proxies')
 # proxy_manager.export_proxy_manager()
-proxy_manager = ProxyManager.import_proxy_manager('proxy_manager/good_proxies', 
+lbc_proxy_manager = ProxyManager.import_proxy_manager('proxy_manager/good_proxies', 
                                    'proxy_manager/bad_proxies',
                                    'proxy_manager/banned_proxies')
 def fetch_listings(payload):
     retries = 0
-    while True:
-        proxy = proxy_manager.get_random_good_proxy()
-        LOGGER.info("[fetch_listings] Using proxy " + str(proxy))
+    success = None
+    while success is None:
+        proxy = lbc_proxy_manager.get_random_good_proxy()
+        LOGGER.info("[fetch listings] Using %s", str(proxy))
         HEADER_TEMPLATE.update({"User-Agent":get_random_user_agent()})
         try:
             r = requests.post("https://api.leboncoin.fr/finder/search",
@@ -62,22 +66,23 @@ def fetch_listings(payload):
                               json=payload,
                               proxies={"https": proxy.get_url()},
                               timeout=5)
-            break
+            success = True
         except Exception as e:
-            LOGGER.warn("[fetch_listings] failed %d times, %s" % (retries, e))
-            if not proxy.test():
-                proxy_manager.fail_proxy(proxy)
-                retries += 1
-                if retries == MAX_RETRIES:
-                    LOGGER.warn("[fetch_listings] abandoning")
-                    return {}
-            else:
-                LOGGER.warn("[fetch_listings] Yet %s seems to work, keeping for now", str(proxy))
-    proxy.succeed()
-    fetch_json = r.json()
-    if "url" in fetch_json.keys() and "datado" in fetch_json["url"]:
-        proxy_manager.ban_proxy(proxy)
-    return fetch_json
+            retries += 1
+            LOGGER.warn("[fetch listings] failed %d times, %s" % (retries, e))
+            lbc_proxy_manager.fail_proxy(proxy)
+            if retries == MAX_RETRIES:
+                success = False
+    if success:
+        LOGGER.info("[fetch listings] Success with %s", str(proxy))
+        proxy.succeed()
+        fetch_json = r.json()
+        if "url" in fetch_json.keys() and "datado" in fetch_json["url"]:
+            lbc_proxy_manager.ban_proxy(proxy)
+        return fetch_json
+    else:
+        LOGGER.warn("[fetch listings] abandoning")
+        return {}
 
 def get_entry_count(fetch_json):
     if "total" not in fetch_json:
@@ -189,12 +194,9 @@ def parselbc(id):
         return id
 
 # For testing
-if __name__=="__main__":    
-    LOGGER.setLevel(logging.INFO)
-    LOGGER.addHandler(logging.StreamHandler())
-
-    search_id = 94
-    search = Search.query.get(search_id)
+if __name__=="__main__":
+    search = Search.query.first()
+    search_id = search.id
     db.session.delete(search.lbc_entries[0])
     db.session.commit()
     parselbc(search_id)
