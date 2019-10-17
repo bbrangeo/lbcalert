@@ -1,22 +1,31 @@
 from threading import Timer
 from time import sleep
+import random
+import logging
+LOGGER = logging.getLogger('lbcalert').getChild('scheduler')
 
 class Scheduler(object):
-    def __init__(self, sleep_time, function):
-        self.sleep_time = sleep_time
+    def __init__(self, max_sleep_time, randomize, function):
+        self.max_sleep_time = max_sleep_time
+        self.randomize = randomize
         self.function = function
         self._t = None
 
     def start(self):
         if self._t is None:
-            self._t = Timer(self.sleep_time, self._run)
+            self._t = Timer(self.get_sleep_time(), self._run)
             self._t.start()
         else:
             raise Exception("this timer is already running")
 
+    def get_sleep_time(self):
+        sleep_time = int((1-random.uniform(0, self.randomize))*self.max_sleep_time)
+        LOGGER.info("[scheduler] sleep time : %d seconds", sleep_time)
+        return sleep_time
+
     def _run(self):
         self.function()
-        self._t = Timer(self.sleep_time, self._run)
+        self._t = Timer(self.get_sleep_time(), self._run)
         self._t.start()
 
     def stop(self):
