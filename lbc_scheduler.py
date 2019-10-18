@@ -16,10 +16,10 @@ def task():
     LOGGER.info("[lbc_scheduler] start task")
     LOGGER.info("[lbc_scheduler] %d (assumed) good proxies in manager",
                 lbc_proxy_manager.good_proxy_count())
-    ids = [search.id for search in Search.query.all()]
-    for id in ids:
-        parselbc(id)
-    LOGGER.info("[lbc_scheduler] backing up proxies")
+    search_ids = [search.id for search in Search.query.all()]
+    for search_id in search_ids:
+        parselbc(search_id)
+    LOGGER.info("[scheduler] backing up proxies")
     lbc_proxy_manager.export_proxy_manager()
     LOGGER.info("[lbc_scheduler] end task")
 

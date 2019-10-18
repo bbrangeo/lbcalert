@@ -1,40 +1,40 @@
 import logging
+import requests
+import dateparser
+import shadow_useragent
+from flask import render_template
+from flask_mail import Mail, Message
+
+from app import app, db
+from models import Search, LBCentry
+
+from proxy_manager.manager import ProxyManager
+
 if __name__ == "__main__":
     logging.getLogger('lbcalert').setLevel(logging.INFO)
     logging.getLogger('lbcalert').addHandler(logging.StreamHandler())
 LOGGER = logging.getLogger('lbcalert').getChild('lbcparser')
 
-import requests
-import re
-import json
-import dateparser
-import shadow_useragent
-
-from flask import render_template
-from flask_mail import Mail, Message
-
-from app import app, db
-from models import User, Search, LBCentry
-
-from proxy_manager import ProxyManager
-
 HEADER_TEMPLATE = {
-    "Content-Type" : "application/json",
-    "api_key" : "ba0c2dad52b3ec",
-    "User-Agent" : "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0",
-    "Accept-Language" : "fr-FR,fr;q=0.5",
-    "Accept-Encoding" : "gzip, deflate, br",
-    "Accept" : "*/*",
-    "Referer" : "https://www.leboncoin.fr/annonces/offres/pays_de_la_loire/",
-    "Origin" : "https://www.leboncoin.fr",
-    "DNT" : "1",
-    "Connection" : "keep-alive",
-    "Cookie": "datadome=3qvLIk4IfzkLdZAbvq-i3oUs8p9nsqll4sAn.gDG8Hfg0d~8SO5Gxm1j-819K629Iblv3aNMoKb8dOipBygUkBtVO4.V8lal6gohz7AY2T; Max-Age=31536000; Domain=.leboncoin.fr; Path=/"
+    "Content-Type":"application/json",
+    "api_key":"ba0c2dad52b3ec",
+    "User-Agent":"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0",
+    "Accept-Language":"fr-FR,fr;q=0.5",
+    "Accept-Encoding":"gzip, deflate, br",
+    "Accept":"*/*",
+    "Referer":"https://www.leboncoin.fr/annonces/offres/pays_de_la_loire/",
+    "Origin":"https://www.leboncoin.fr",
+    "DNT":"1",
+    "Connection":"keep-alive",
+    "Cookie":"datadome=3qvLIk4IfzkLdZAbvq-i3oUs8p9nsqll4sAn.gDG8Hfg0d~8SO5Gxm1j-"
+             "819K629Iblv3aNMoKb8dOipBygUkBtVO4.V8lal6gohz7AY2T;"
+             "Max-Age=31536000; Domain=.leboncoin.fr; Path=/"
 }
 COOKIES = {
-    "datadome" : "FbFpYkJJWoFw_JTHOvO1Qx4GN0r~NytNwhULUnLvDwHqPtHvU3-aB~qAzzX05TCO2Y49PCh8eSIYcdFwTrWk1CTDxPReScw~8XcBkJjWSC",
-    "Domain" : ".leboncoin.fr",
-    "Path" : "/"
+    "datadome":"FbFpYkJJWoFw_JTHOvO1Qx4GN0r~NytNwhULUnLvDwHqPtHvU3-"
+               "aB~qAzzX05TCO2Y49PCh8eSIYcdFwTrWk1CTDxPReScw~8XcBkJjWSC",
+    "Domain":".leboncoin.fr",
+    "Path":"/"
 }
 
 ua = shadow_useragent.ShadowUserAgent()
@@ -45,13 +45,16 @@ def get_random_user_agent():
 
 MAX_RETRIES = 5
 # proxy_manager = ProxyManager.from_csv("proxy_manager/proxy_import",
-#                                       'proxy_manager/good_proxies', 
+#                                       'proxy_manager/good_proxies',
 #                                       'proxy_manager/bad_proxies',
 #                                       'proxy_manager/banned_proxies')
 # proxy_manager.export_proxy_manager()
-lbc_proxy_manager = ProxyManager.import_proxy_manager('proxy_manager/good_proxies', 
-                                   'proxy_manager/bad_proxies',
-                                   'proxy_manager/banned_proxies')
+lbc_proxy_manager = ProxyManager.\
+                        import_proxy_manager(export_files={
+                                                'good_proxies':'proxy_manager/good_proxies',
+                                                'bad_proxies':'proxy_manager/bad_proxies',
+                                            'banned_proxies':'proxy_manager/banned_proxies'
+                                             })
 def fetch_listings(payload):
     retries = 0
     success = None
@@ -60,12 +63,12 @@ def fetch_listings(payload):
         LOGGER.info("[fetch listings] Using %s", str(proxy))
         HEADER_TEMPLATE.update({"User-Agent":get_random_user_agent()})
         try:
-            r = requests.post("https://api.leboncoin.fr/finder/search",
-                              headers=HEADER_TEMPLATE,
-                              # cookies = COOKIES,
-                              json=payload,
-                              proxies={"https": proxy.get_url()},
-                              timeout=5)
+            resp = requests.post("https://api.leboncoin.fr/finder/search",
+                                 headers=HEADER_TEMPLATE,
+                                 # cookies = COOKIES,
+                                 json=payload,
+                                 proxies={"https": proxy.get_url()},
+                                 timeout=5)
             success = True
         except Exception as e:
             retries += 1
@@ -76,7 +79,7 @@ def fetch_listings(payload):
     if success:
         LOGGER.info("[fetch listings] Success with %s", str(proxy))
         proxy.succeed()
-        fetch_json = r.json()
+        fetch_json = resp.json()
         if "url" in fetch_json.keys() and "datado" in fetch_json["url"]:
             lbc_proxy_manager.ban_proxy(proxy)
         return fetch_json
@@ -103,8 +106,8 @@ def get_new_items(existing_ids, ads):
 
         try:
             price = int(ad['price'][0])
-        except:
-            LOGGER.error("[get_new_items] price issue with " + str(ad))
+        except Exception as e:
+            LOGGER.error("[get_new_items] price issue with %s - %s", str(ad), str(e))
             continue
 
         description = ad["body"]
@@ -128,7 +131,7 @@ def get_new_items(existing_ids, ads):
 
         imgnumber = None
 
-        params={
+        params = {
             "linkid":listid,
             "title":title,
             "category":category,
@@ -145,12 +148,12 @@ def get_new_items(existing_ids, ads):
         listings.append(a)
     return listings
 
-def parselbc(id):
+def parselbc(_search_id):
     # database interactions within an app context
     with app.app_context():
-        search = Search.query.get(id)
+        _search = Search.query.get(_search_id)
 
-        payload = search.get_payload()
+        payload = _search.get_payload()
         LOGGER.info("[parselbc]" + str(payload))
 
         fetch_json = fetch_listings(payload)
@@ -158,7 +161,7 @@ def parselbc(id):
 
         if entry_count > 0:
             ads = fetch_json["ads"]
-            existing_ids = [e.linkid for e in search.lbc_entries]
+            existing_ids = [e.linkid for e in _search.lbc_entries]
             new_items = get_new_items(existing_ids, ads)
         else:
             new_items = []
@@ -166,35 +169,37 @@ def parselbc(id):
         new_item_count = len(new_items)
 
         LOGGER.info("[parselbc] found %d new listings" % new_item_count)
-        
-        if new_item_count>0:
+
+        if new_item_count > 0:
             # commit new items to db
             for listing in new_items:
-                search.lbc_entries.append(listing)
+                _search.lbc_entries.append(listing)
             db.session.commit()
 
             LOGGER.info("[parselbc] sending email")
-            mail=Mail(app)
-            msg = Message('[LBCbot - '+app.config["VERSION"]+'] New items for "'+search.title+'"', sender='lbcbot@gmail.com', recipients=[user.email for user in search.users])
+            mail = Mail(app)
+            msg = Message('[LBCbot - '+app.config["VERSION"]+'] New items for "'+_search.title+'"',
+                          sender='lbcbot@gmail.com', recipients=[user.email for user in _search.users])
             msg.html = render_template('email_entries.html', lbcentries=new_items)
             mail.send(msg)
 
             # send with notification service gotify
             # url looks like "https://push.example.de/message?token=<apptoken>"
-            if search.notify == True:
-                notify_url = search.notify_url
+            if _search.notify:
+                notify_url = _search.notify_url
                 LOGGER.info("[parselbc] notifying using %s" % notify_url)
                 resp = requests.post(notify_url, json={
-                    "message": "%s new items" % search.title,
-                    "priority": 5,
-                    "title": "Lbcalert"
-                }, timeout = 5)
+                    "message":"%s new items" % _search.title,
+                    "priority":5,
+                    "title":"Lbcalert"
+                }, timeout=5)
+                resp.raise_for_status()
                 LOGGER.info("[parselbc] notified")
         LOGGER.info("[parselbc] exiting")
-        return id
+        return _search_id
 
 # For testing
-if __name__=="__main__":
+if __name__ == "__main__":
     search = Search.query.first()
     search_id = search.id
     db.session.delete(search.lbc_entries[0])
