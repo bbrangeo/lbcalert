@@ -3,7 +3,6 @@ from flask_login import login_user, logout_user, login_required, current_user
 
 from app import app, db
 from models import Search, LBCentry
-from lbcparser import parselbc
 from models import User
 
 import re

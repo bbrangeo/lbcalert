@@ -7,7 +7,8 @@ lbcalert_logger.addHandler(logging.StreamHandler())
 from app import app, db
 import models
 import login
-import lbc_scheduler
+import search_scheduler
+import proxy_scheduler
 import router
 
 if __name__=="__main__":

@@ -5,7 +5,7 @@ import logging
 LOGGER = logging.getLogger('lbcalert').getChild('scheduler')
 
 class Scheduler(object):
-    def __init__(self, max_sleep_time, randomize, function):
+    def __init__(self, function, max_sleep_time, randomize=0):
         self.max_sleep_time = max_sleep_time
         self.randomize = randomize
         self.function = function
@@ -19,8 +19,11 @@ class Scheduler(object):
             raise Exception("this timer is already running")
 
     def get_sleep_time(self):
-        sleep_time = int((1-random.uniform(0, self.randomize))*self.max_sleep_time)
-        LOGGER.info("[scheduler] sleep time : %d seconds", sleep_time)
+        if self.randomize>0:
+            sleep_time = int((1-random.uniform(0, self.randomize))*self.max_sleep_time)
+        else:
+            sleep_time = self.max_sleep_time
+        LOGGER.info("[scheduler] sleep time : %d seconds" % sleep_time)
         return sleep_time
 
     def _run(self):

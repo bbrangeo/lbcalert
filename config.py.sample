@@ -31,8 +31,7 @@ class ProductionConfig(Config):
     VERSION = "PROD"
 
 class DevelopmentConfig(Config):
-    DEVELOPMENT = True
-    DEBUG = True
+    DEBUG = False
     SERVER_NAME = "localhost:5000"
     VERSION = "DEV"
 

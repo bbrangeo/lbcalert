@@ -9,7 +9,7 @@ redis_url = os.getenv('REDISTOGO_URL', 'redis://localhost:6379')
 conn = redis.from_url(redis_url)
 
 # pre-import required modules for performance
-import lbcparser
+import parser
 
 if __name__ == '__main__':
     with Connection(conn):

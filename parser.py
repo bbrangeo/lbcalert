@@ -7,13 +7,12 @@ from flask_mail import Mail, Message
 
 from app import app, db
 from models import Search, LBCentry
-
-from proxy_manager.manager import ProxyManager
+from proxy_scheduler import lbc_proxy_manager
 
 if __name__ == "__main__":
     logging.getLogger('lbcalert').setLevel(logging.INFO)
     logging.getLogger('lbcalert').addHandler(logging.StreamHandler())
-LOGGER = logging.getLogger('lbcalert').getChild('lbcparser')
+LOGGER = logging.getLogger('lbcalert').getChild('parser')
 
 HEADER_TEMPLATE = {
     "Content-Type":"application/json",
@@ -44,17 +43,6 @@ def get_random_user_agent():
     return agent
 
 MAX_RETRIES = 5
-# proxy_manager = ProxyManager.from_csv("proxy_manager/proxy_import",
-#                                       'proxy_manager/good_proxies',
-#                                       'proxy_manager/bad_proxies',
-#                                       'proxy_manager/banned_proxies')
-# proxy_manager.export_proxy_manager()
-lbc_proxy_manager = ProxyManager.\
-                        import_proxy_manager(export_files={
-                                                'good_proxies':'proxy_manager/good_proxies',
-                                                'bad_proxies':'proxy_manager/bad_proxies',
-                                            'banned_proxies':'proxy_manager/banned_proxies'
-                                             })
 def fetch_listings(payload):
     retries = 0
     success = None
