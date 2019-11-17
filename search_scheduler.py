@@ -16,7 +16,6 @@ def run_searches():
     search_ids = [search.id for search in Search.query.all()]
     for search_id in search_ids:
         parselbc(search_id)
-    LOGGER.info("[search_scheduler] backing up proxies")
     LOGGER.info("[search_scheduler] end task")
 
 # randomize from 2.5 to 5 minutes
