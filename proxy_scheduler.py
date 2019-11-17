@@ -20,9 +20,7 @@ def update_proxies():
     LOGGER.info("[lbc_proxies] unbanning proxies")
     lbc_proxy_manager.unban_oldest(24)
     LOGGER.info("[lbc_proxies] updating proxies")
-    r = requests.get("https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt")
-    proxies_string = r.text.strip()  
-    lbc_proxy_manager.import_string(proxies_string)
+    lbc_proxy_manager.fetch_sources()
     LOGGER.info("[lbc_proxies] %d (assumed) good proxies in manager",
                 lbc_proxy_manager.good_proxy_count())
     LOGGER.info("[lbc_proxies] exporting proxies")
