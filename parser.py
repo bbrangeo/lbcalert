@@ -29,12 +29,12 @@ HEADER_TEMPLATE = {
              "819K629Iblv3aNMoKb8dOipBygUkBtVO4.V8lal6gohz7AY2T;"
              "Max-Age=31536000; Domain=.leboncoin.fr; Path=/"
 }
-COOKIES = {
-    "datadome":"FbFpYkJJWoFw_JTHOvO1Qx4GN0r~NytNwhULUnLvDwHqPtHvU3-"
-               "aB~qAzzX05TCO2Y49PCh8eSIYcdFwTrWk1CTDxPReScw~8XcBkJjWSC",
-    "Domain":".leboncoin.fr",
-    "Path":"/"
-}
+# COOKIES = {
+#     "datadome":"FbFpYkJJWoFw_JTHOvO1Qx4GN0r~NytNwhULUnLvDwHqPtHvU3-"
+#                "aB~qAzzX05TCO2Y49PCh8eSIYcdFwTrWk1CTDxPReScw~8XcBkJjWSC",
+#     "Domain":".leboncoin.fr",
+#     "Path":"/"
+# }
 
 ua = shadow_useragent.ShadowUserAgent()
 def get_random_user_agent():
@@ -48,6 +48,9 @@ def fetch_listings(payload):
     success = None
     while success is None:
         proxy = lbc_proxy_manager.get_random_good_proxy()
+        if proxy is None:
+            LOGGER.error("fetch listings] no more good proxy to use")
+            return {}
         LOGGER.info("[fetch listings] Using %s", str(proxy))
         HEADER_TEMPLATE.update({"User-Agent":get_random_user_agent()})
         try:
