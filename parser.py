@@ -7,7 +7,7 @@ from flask_mail import Mail, Message
 
 from app import app, db
 from models import Search, LBCentry
-from proxy_scheduler import lbc_proxy_manager
+from proxy_scheduler import lbc_proxy_manager, proxy_manager_lock
 
 if __name__ == "__main__":
     logging.getLogger('lbcalert').setLevel(logging.INFO)
@@ -39,7 +39,7 @@ HEADER_TEMPLATE = {
 ua = shadow_useragent.ShadowUserAgent()
 def get_random_user_agent():
     agent = ua.percent(0.05)
-    LOGGER.info("[shadow_useragent] using : " + agent)
+    # LOGGER.info("[shadow_useragent] using : " + agent)
     return agent
 
 MAX_RETRIES = 5
@@ -49,30 +49,47 @@ def fetch_listings(payload):
     while success is None:
         proxy = lbc_proxy_manager.get_random_good_proxy()
         if proxy is None:
-            LOGGER.error("fetch listings] no more good proxy to use")
-            return {}
-        LOGGER.info("[fetch listings] Using %s", str(proxy))
-        HEADER_TEMPLATE.update({"User-Agent":get_random_user_agent()})
+            LOGGER.error("[fetch listings] no more good proxy to use")
+            success = False
+        else:
+            LOGGER.info("[fetch listings] Using proxy %s", str(proxy))
+            HEADER_TEMPLATE.update({"User-Agent":get_random_user_agent()})
+            try:
+                resp = requests.post("https://api.leboncoin.fr/finder/search",
+                                    headers=HEADER_TEMPLATE,
+                                    # cookies = COOKIES,
+                                    json=payload,
+                                    proxies={"https": proxy.get_url()},
+                                    timeout=5)
+                success = True
+            except Exception as e:
+                retries += 1
+                LOGGER.warn("[fetch listings] failed %d times, %s" % (retries, e))
+                with proxy_manager_lock:
+                    lbc_proxy_manager.fail_proxy(proxy)
+                if retries == MAX_RETRIES:
+                    success = False
+    if not success:
+        LOGGER.error("[fetch listings] fetching without proxy")       
         try:
             resp = requests.post("https://api.leboncoin.fr/finder/search",
-                                 headers=HEADER_TEMPLATE,
-                                 # cookies = COOKIES,
-                                 json=payload,
-                                 proxies={"https": proxy.get_url()},
-                                 timeout=5)
+                                headers=HEADER_TEMPLATE,
+                                # cookies = COOKIES,
+                                json=payload,
+                                timeout=5)
             success = True
         except Exception as e:
-            retries += 1
-            LOGGER.warn("[fetch listings] failed %d times, %s" % (retries, e))
-            lbc_proxy_manager.fail_proxy(proxy)
-            if retries == MAX_RETRIES:
-                success = False
+            LOGGER.warn("[fetch listings] without proxy failed, %s" % e)                
     if success:
-        LOGGER.info("[fetch listings] Success with %s", str(proxy))
-        proxy.succeed()
+        if proxy is not None:
+            proxy.succeed()
         fetch_json = resp.json()
         if "url" in fetch_json.keys() and "datado" in fetch_json["url"]:
-            lbc_proxy_manager.ban_proxy(proxy)
+            LOGGER.warn("[fetch listings] detected by datado.me")
+            if proxy is not None:
+                with proxy_manager_lock:
+                    lbc_proxy_manager.ban_proxy(proxy)
+            return {}
         return fetch_json
     else:
         LOGGER.warn("[fetch listings] abandoning")
@@ -80,8 +97,8 @@ def fetch_listings(payload):
 
 def get_entry_count(fetch_json):
     if "total" not in fetch_json:
-        LOGGER.error("[get_entry_count] couldn't get listings, LBC response below")
-        LOGGER.info(fetch_json)
+        # LOGGER.error("[get_entry_count] couldn't get listings, LBC response below")
+        # LOGGER.info(fetch_json)
         return 0
     else:
         entry_count = fetch_json["total"]
@@ -145,7 +162,7 @@ def parselbc(_search_id):
         _search = Search.query.get(_search_id)
 
         payload = _search.get_payload()
-        LOGGER.info("[parselbc]" + str(payload))
+        LOGGER.info("[parselbc] %s", _search.title)
 
         fetch_json = fetch_listings(payload)
         entry_count = get_entry_count(fetch_json)
@@ -155,7 +172,8 @@ def parselbc(_search_id):
             existing_ids = [e.linkid for e in _search.lbc_entries]
             new_items = get_new_items(existing_ids, ads)
         else:
-            new_items = []
+            LOGGER.info("[parselbc] no new listings")
+            return []
 
         new_item_count = len(new_items)
 
@@ -186,13 +204,15 @@ def parselbc(_search_id):
                 }, timeout=5)
                 resp.raise_for_status()
                 LOGGER.info("[parselbc] notified")
-        LOGGER.info("[parselbc] exiting")
+        # LOGGER.info("[parselbc] exiting")
         return _search_id
 
 # For testing
 if __name__ == "__main__":
     search = Search.query.first()
     search_id = search.id
-    db.session.delete(search.lbc_entries[0])
+    entry = search.lbc_entries[0]
+    print(entry.title)
+    db.session.delete(entry)
     db.session.commit()
     parselbc(search_id)

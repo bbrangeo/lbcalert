@@ -5,6 +5,7 @@ if __name__ == "__main__":
 LOGGER = logging.getLogger('lbcalert').getChild('proxy')
 
 import requests
+import threading
 
 from scheduler import Scheduler
 from proxy_manager.manager import ProxyManager
@@ -15,16 +16,20 @@ lbc_proxy_manager = ProxyManager.\
                                                 'bad_proxies':'proxy_manager/bad_proxies',
                                                 'banned_proxies':'proxy_manager/banned_proxies'
                                              })
+proxy_manager_lock = threading.Lock()
 
 def update_proxies():
-    LOGGER.info("[lbc_proxies] unbanning proxies")
-    lbc_proxy_manager.unban_oldest(24)
-    LOGGER.info("[lbc_proxies] updating proxies")
-    lbc_proxy_manager.fetch_sources()
-    LOGGER.info("[lbc_proxies] %d (assumed) good proxies in manager",
-                lbc_proxy_manager.good_proxy_count())
-    LOGGER.info("[lbc_proxies] exporting proxies")
-    lbc_proxy_manager.export_proxy_manager()
+    with proxy_manager_lock:
+        LOGGER.info("[lbc_proxies] unbanning proxies")
+        lbc_proxy_manager.unban_oldest(24)
+        LOGGER.info("[lbc_proxies] updating proxies")
+        lbc_proxy_manager.fetch_sources()
+        LOGGER.info("[lbc_proxies] restoring bad proxies that are good")
+        lbc_proxy_manager.check_bad_proxies()  
+        LOGGER.info("[lbc_proxies] %d (assumed) good proxies in manager",
+                    lbc_proxy_manager.good_proxy_count())
+        LOGGER.info("[lbc_proxies] exporting proxies")
+        lbc_proxy_manager.export_proxy_manager()
     return
 
 proxy_scheduler = Scheduler(update_proxies, 3600)

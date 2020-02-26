@@ -1,7 +1,10 @@
 import logging
 lbcalert_logger = logging.getLogger('lbcalert')
 lbcalert_logger.setLevel(logging.INFO)
-lbcalert_logger.addHandler(logging.StreamHandler())
+lbcalert_handler = logging.StreamHandler()
+# lbcalert_formatter = logging.Formatter('%(threadName)s %(message)s')
+# lbcalert_handler.setFormatter(lbcalert_formatter)
+lbcalert_logger.addHandler(lbcalert_handler)
 
 # impose import order
 from app import app, db

@@ -6,12 +6,6 @@ from flask_login import current_user
 from helper_functions import merge_dicts
 import json
 
-import logging
-
-logger = logging.getLogger().getChild('models')
-logger.setLevel('INFO')
-logger.addHandler(logging.StreamHandler())
-
 search_entry_links = db.Table('search_entry_links',
     db.Column('search_id', db.Integer, db.ForeignKey('searches.id', ondelete='CASCADE')),
     db.Column('lbc_entry_id', db.Integer, db.ForeignKey('lbc_entries.id', ondelete='CASCADE'))
@@ -100,7 +94,6 @@ class Search(db.Model):
                 extra_json = json.loads(self.extras)
             except:
                 extra_json = {}
-                logger.warn("[get_payload] couldn't parse extras")
             payload = merge_dicts(payload,extra_json)
         return payload
 
