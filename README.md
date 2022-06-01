@@ -1,3 +1,5 @@
+DEPRECATED
+
 ## LBCalert
 
 An alert system for a familiar classifieds service
